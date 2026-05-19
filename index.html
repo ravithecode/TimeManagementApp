@@ -196,6 +196,7 @@ select.opt-chip{appearance:none;cursor:pointer}
       </div>
       <button class="login-btn" onclick="doLogin()">let me in →</button>
       <p class="login-err" id="login-err"></p>
+      <button onclick="openResetPin()" style="background:none;border:none;font-size:12px;color:var(--ink3);text-decoration:underline;margin-top:6px;cursor:pointer;width:100%;text-align:center">forgot PIN?</button>
     </div>
   </div>
 </div>
@@ -345,11 +346,28 @@ select.opt-chip{appearance:none;cursor:pointer}
     <div class="nu-emoji-row" id="nu-emoji-row"></div>
     <input type="text" id="nu-name" placeholder="your name (e.g. Aastha)" maxlength="20"/>
     <input type="password" id="nu-pin" placeholder="choose a PIN (4–6 digits)" maxlength="6" inputmode="numeric"/>
+    <input type="text" id="nu-question" placeholder="secret question (e.g. pet's name?)" maxlength="80"/>
+    <input type="text" id="nu-answer" placeholder="your answer (used to reset PIN)" maxlength="80"/>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeNewUser()">cancel</button>
       <button class="mbtn pri" onclick="createUser()">create →</button>
     </div>
     <p style="font-size:13px;color:#c0392b;margin-top:8px" id="nu-err"></p>
+  </div>
+</div>
+
+<!-- Reset PIN modal -->
+<div class="overlay" id="resetoverlay">
+  <div class="modal">
+    <h2>reset PIN</h2>
+    <p id="reset-question-text" style="font-size:14px;color:var(--ink2);margin-bottom:12px;line-height:1.6"></p>
+    <input type="text" id="reset-answer-input" placeholder="your secret answer"/>
+    <input type="password" id="reset-new-pin" placeholder="new PIN (4–6 digits)" maxlength="6" inputmode="numeric"/>
+    <div class="modal-btns">
+      <button class="mbtn sec" onclick="closeResetPin()">cancel</button>
+      <button class="mbtn pri" onclick="doResetPin()">reset →</button>
+    </div>
+    <p style="font-size:13px;color:#c0392b;margin-top:8px" id="reset-err"></p>
   </div>
 </div>
 
@@ -469,12 +487,17 @@ async function createUser(){
   const pin = document.getElementById('nu-pin').value.trim();
   const err = document.getElementById('nu-err');
   if(!name||pin.length<4){err.textContent='name + 4–6 digit PIN required';return}
+  const question = document.getElementById('nu-question').value.trim();
+  const answer = document.getElementById('nu-answer').value.trim().toLowerCase();
+  if(!question||!answer){err.textContent='secret question + answer required';return}
   const color = COLORS[Math.floor(Math.random()*COLORS.length)];
-  const result = await sb('users','POST',{username:name,pin,avatar:nuEmoji,color});
+  const result = await sb('users','POST',{username:name,pin,avatar:nuEmoji,color,secret_question:question,secret_answer:answer});
   if(!result||result.error){err.textContent='username taken, try another';return}
   closeNewUser();
   document.getElementById('nu-name').value='';
   document.getElementById('nu-pin').value='';
+  document.getElementById('nu-question').value='';
+  document.getElementById('nu-answer').value='';
   showLoginScreen();
 }
 
@@ -775,6 +798,49 @@ function checkPrompts(){
     playChime();
     setTimeout(()=>openJModal('good evening 🌙','what are you grateful for today?','reflect on today…',pmKey),500);
   }
+}
+
+// ── RESET PIN ──────────────────────────────────
+function openResetPin(){
+  if(!selectedUserId){
+    document.getElementById('login-err').textContent='pick a user first';
+    return;
+  }
+  // Load the user's secret question
+  sb('users','GET',null,{id:selectedUserId}).then(users=>{
+    if(!users||!users.length) return;
+    const user = users[0];
+    document.getElementById('reset-question-text').textContent = 
+      `Answer your secret question to reset your PIN:
+
+"${user.secret_question}"`;
+    document.getElementById('reset-answer-input').value='';
+    document.getElementById('reset-new-pin').value='';
+    document.getElementById('reset-err').textContent='';
+    document.getElementById('resetoverlay').classList.add('open');
+    document.getElementById('reset-answer-input').focus();
+  });
+}
+function closeResetPin(){
+  document.getElementById('resetoverlay').classList.remove('open');
+}
+async function doResetPin(){
+  const answer = document.getElementById('reset-answer-input').value.trim().toLowerCase();
+  const newPin = document.getElementById('reset-new-pin').value.trim();
+  const err = document.getElementById('reset-err');
+  if(!answer){err.textContent='please enter your secret answer';return}
+  if(newPin.length < 4){err.textContent='PIN must be 4–6 digits';return}
+  // Verify secret answer
+  const users = await sb('users','GET',null,{id:selectedUserId,secret_answer:answer});
+  if(!users||!users.length){
+    err.textContent='wrong answer, try again';
+    return;
+  }
+  // Update PIN
+  await sb('users','PATCH',{pin:newPin},{id:selectedUserId});
+  closeResetPin();
+  document.getElementById('pin-input').value='';
+  document.getElementById('login-err').textContent='PIN reset! enter your new PIN to log in';
 }
 
 boot();
