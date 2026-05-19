@@ -8,7 +8,6 @@
 <title>my tasks</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -23,22 +22,7 @@ h1{font-family:'Fraunces',serif;font-size:26px;font-weight:400}
 button{cursor:pointer;font-family:'DM Sans',sans-serif}
 input,select,textarea{font-family:'DM Sans',sans-serif}
 
-/* ── SETUP SCREEN ── */
-#setup-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center}
-#setup-screen h1{margin-bottom:8px}
-#setup-screen p{font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:20px}
-.setup-field{width:100%;max-width:420px;margin-bottom:10px}
-.setup-field label{display:block;font-size:12px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;text-align:left}
-.setup-field input{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:14px;color:var(--ink);outline:none;transition:border-color .2s;background:var(--surface)}
-.setup-field input:focus{border-color:var(--accent)}
-.setup-hint{max-width:420px;background:var(--surface2);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--ink2);line-height:1.7;text-align:left;margin-bottom:18px}
-.setup-hint a{color:var(--blue);text-decoration:none}
-.setup-hint code{font-size:12px;background:#e8e6e0;padding:1px 6px;border-radius:5px}
-.setup-btn-primary{width:100%;max-width:420px;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:500;margin-top:4px;transition:opacity .15s}
-.setup-btn-primary:hover{opacity:.9}
-.setup-err{color:#c0392b;font-size:13px;margin-top:8px;min-height:20px}
-
-/* ── LOGIN SCREEN ── */
+/* LOGIN */
 #login-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
 .login-card{width:100%;max-width:380px;background:var(--surface);border-radius:20px;border:1px solid #ece9e4;padding:28px 24px}
 .login-card h2{font-family:'Fraunces',serif;font-size:22px;font-weight:400;margin-bottom:4px}
@@ -46,39 +30,36 @@ input,select,textarea{font-family:'DM Sans',sans-serif}
 .user-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .user-tile{background:var(--surface2);border:1.5px solid transparent;border-radius:14px;padding:14px 10px;text-align:center;cursor:pointer;transition:all .2s}
 .user-tile:hover,.user-tile.selected{border-color:var(--accent);background:#fff8f6}
-.user-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px;background:var(--surface)}
+.user-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px}
 .user-tile-name{font-size:13px;font-weight:500;color:var(--ink2)}
 .add-user-tile{border:1.5px dashed #d0cdc8;background:transparent;color:var(--ink3)}
 .add-user-tile:hover{border-color:var(--accent);color:var(--accent);background:transparent}
-.pin-row{display:flex;gap:10px;margin-top:4px}
-.pin-row input{flex:1;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;transition:border-color .2s;letter-spacing:.2em}
+.pin-row input{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;letter-spacing:.2em}
 .pin-row input:focus{border-color:var(--accent)}
-.login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:500;margin-top:12px;transition:opacity .15s}
-.login-btn:hover{opacity:.9}
+.login-btn{width:100%;background:var(--accent);color:#fff;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:500;margin-top:12px}
 .login-err{color:#c0392b;font-size:13px;margin-top:8px;min-height:18px;text-align:center}
 
-/* ── SYNC BAR ── */
+/* SYNC BAR */
 .sync-bar{background:var(--surface);border-bottom:.5px solid #e5e2dd;padding:6px 16px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink3);position:sticky;top:0;z-index:40}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;transition:background .3s}
 .sync-dot.ok{background:var(--green)}
 .sync-dot.busy{background:var(--amber);animation:pulse 1s infinite}
 .sync-dot.err{background:#c0392b}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.sync-label{flex:1}
-.who-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:3px 10px;font-size:11px;color:var(--ink2);font-weight:500;display:flex;align-items:center;gap:5px}
+.who-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:3px 10px;font-size:11px;color:var(--ink2);font-weight:500;display:flex;align-items:center;gap:5px;margin-left:auto}
 
-/* ── NAV ── */
+/* NAV */
 .nav{display:flex;background:var(--surface);border-top:.5px solid #e5e2dd;position:fixed;bottom:0;left:0;right:0;z-index:50;padding:6px 0 env(safe-area-inset-bottom,10px)}
 .nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;font-size:10px;font-weight:500;color:var(--ink3);padding:4px 0;transition:color .15s;letter-spacing:.04em;text-transform:uppercase}
 .nav-btn i{font-size:22px}
 .nav-btn.active{color:var(--accent)}
 
-/* ── SCREENS ── */
+/* SCREENS */
 .screen{display:none;padding-bottom:90px;animation:fadeIn .2s ease}
 .screen.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
-/* ── HEADER ── */
+/* HEADER */
 .header{color:#fff;padding:22px 20px 16px;position:relative;overflow:hidden}
 .header::before{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08)}
 .header p{font-size:13px;opacity:.8;margin-top:3px}
@@ -86,18 +67,17 @@ input,select,textarea{font-family:'DM Sans',sans-serif}
 .stat{background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;font-size:12px;color:#fff;font-weight:500}
 .stat span{display:block;font-size:20px;font-weight:500;font-family:'Fraunces',serif;line-height:1}
 
-/* ── TODAY BANNER ── */
+/* TODAY BANNER */
 .today-banner{margin:14px 16px 0;background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;overflow:hidden}
 .today-banner-hdr{padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
 .today-banner-hdr span{font-size:12px;font-weight:500;color:var(--ink2);display:flex;align-items:center;gap:6px}
 .today-items{padding:0 14px 6px;display:flex;flex-direction:column;gap:6px}
 .today-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2)}
 .today-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.today-row.done-t .today-dot{background:var(--green)}
 .today-row.done-t span{text-decoration:line-through;color:var(--ink3)}
 .add-today-btn{margin:4px 14px 10px;font-size:12px;color:var(--accent);background:none;border:1px dashed var(--accent2);border-radius:8px;padding:5px 10px;width:calc(100% - 28px);text-align:left;opacity:.85}
 
-/* ── ADD BAR ── */
+/* ADD BAR */
 .add-bar{margin:12px 16px 0;background:var(--surface);border-radius:var(--radius);border:1.5px solid #e5e2dd;padding:4px 4px 4px 14px;display:flex;align-items:center;gap:8px;transition:border-color .2s}
 .add-bar:focus-within{border-color:var(--accent)}
 .add-bar input{flex:1;border:none;outline:none;font-size:15px;color:var(--ink);background:transparent;padding:8px 0}
@@ -107,7 +87,7 @@ input,select,textarea{font-family:'DM Sans',sans-serif}
 .opt-chip{padding:5px 11px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid #ddd;background:var(--surface);color:var(--ink2)}
 select.opt-chip{appearance:none;cursor:pointer}
 
-/* ── CAT FILTER ── */
+/* CAT FILTER */
 .section{padding:12px 16px 0}
 .section-label{font-size:11px;font-weight:500;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;margin-bottom:8px}
 .cat-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
@@ -116,7 +96,7 @@ select.opt-chip{appearance:none;cursor:pointer}
 .cat-pill:not(.active){background:var(--surface);border-color:#e0ddd8;color:var(--ink2)}
 .cat-pill.active{color:#fff}
 
-/* ── TODO LIST ── */
+/* TODO LIST */
 .todo-list{padding:10px 16px 0;display:flex;flex-direction:column;gap:9px}
 .todo-item{background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;animation:slideIn .22s ease}
 @keyframes slideIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
@@ -141,13 +121,13 @@ select.opt-chip{appearance:none;cursor:pointer}
 .comp-toggle i{font-size:14px;transition:transform .2s}
 .comp-toggle.open i{transform:rotate(90deg)}
 
-/* ── JOURNAL ── */
+/* JOURNAL */
 .journal-card{margin:14px 16px 0;background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;overflow:hidden}
 .jcard-hdr{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:.5px solid #ece9e4}
 .jcard-hdr .jdate{font-size:12px;color:var(--ink3);margin-left:auto}
 .journal-ta{width:100%;border:none;outline:none;font-size:14px;color:var(--ink);padding:14px 16px;min-height:100px;resize:none;background:transparent;line-height:1.6}
 .journal-ta::placeholder{color:var(--ink3)}
-.journal-save{margin:0 16px 10px;display:block;color:#fff;border:none;border-radius:10px;padding:10px;width:calc(100% - 32px);font-size:14px;font-weight:500}
+.journal-save{margin:0 16px 10px;display:block;color:#fff;border:none;border-radius:10px;padding:10px;width:calc(100% - 32px);font-size:14px;font-weight:500;cursor:pointer}
 .entry-card{background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;padding:12px 14px;margin-bottom:10px}
 .entry-card .edate{font-size:11px;color:var(--ink3);margin-bottom:6px;display:flex;align-items:center;gap:5px}
 .entry-card .etext{font-size:14px;color:var(--ink2);line-height:1.6}
@@ -155,18 +135,18 @@ select.opt-chip{appearance:none;cursor:pointer}
 .etype.am{background:#fff8e6;color:#b06a0a}
 .etype.pm{background:#f0eaf9;color:#6b3fa0}
 
-/* ── PLANNER ── */
+/* PLANNER */
 .meeting-add{display:flex;gap:8px;margin-bottom:8px}
 .meeting-add input{border:1px solid #ddd;border-radius:10px;padding:8px 12px;font-size:13px;color:var(--ink);background:var(--surface);outline:none}
 .meeting-add input[type=time]{width:90px;flex:none}
 .meeting-add input[type=text]{flex:1}
-.meeting-add button{background:#1a3a5c;color:#fff;border:none;border-radius:10px;padding:8px 13px;font-size:13px;font-weight:500}
+.meeting-add button{background:#1a3a5c;color:#fff;border:none;border-radius:10px;padding:8px 13px;font-size:13px;font-weight:500;cursor:pointer}
 .meeting-row{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid #ece9e4;border-radius:10px;padding:9px 12px;margin-bottom:6px;font-size:13px}
 .meeting-row i{color:#1a3a5c;font-size:15px}
-.meeting-row .mtime{font-weight:500;color:#1a3a5c;min-width:70px}
-.meeting-row .mtitle{flex:1;color:var(--ink2)}
+.mtime{font-weight:500;color:#1a3a5c;min-width:70px}
+.mtitle{flex:1;color:var(--ink2)}
 .mdel{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer}
-.gen-btn{width:100%;background:#1a3a5c;color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:500;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+.gen-btn{width:100%;background:#1a3a5c;color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
 .sched-block{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
 .stime{font-size:12px;font-weight:500;color:var(--ink3);min-width:48px;text-align:right;padding-top:3px}
 .sline{display:flex;flex-direction:column;align-items:center}
@@ -182,28 +162,21 @@ select.opt-chip{appearance:none;cursor:pointer}
 .loading-ai i{font-size:32px;display:block;margin-bottom:10px;animation:spin 1.2s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── MODAL (journal prompts) ── */
-.joverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.joverlay.open{display:flex}
-.jmodal{background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;animation:slideUp .25s ease}
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;animation:slideUp .25s ease}
 @keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
-.jmodal h2{font-family:'Fraunces',serif;font-size:22px;font-weight:400;margin-bottom:8px}
-.jmodal p{font-size:14px;color:var(--ink2);margin-bottom:12px;line-height:1.6}
-.jmodal textarea{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:12px 14px;font-size:14px;color:var(--ink);outline:none;resize:none;line-height:1.6;background:var(--surface);min-height:90px}
-.jmodal textarea:focus{border-color:var(--purple)}
+.modal h2{font-family:'Fraunces',serif;font-size:22px;font-weight:400;margin-bottom:8px}
+.modal p{font-size:14px;color:var(--ink2);margin-bottom:12px;line-height:1.6}
+.modal textarea{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:12px 14px;font-size:14px;color:var(--ink);outline:none;resize:none;line-height:1.6;background:var(--surface);min-height:90px}
+.modal textarea:focus{border-color:var(--purple)}
+.modal input{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;margin-bottom:10px;background:var(--surface)}
+.modal input:focus{border-color:var(--accent)}
 .modal-btns{display:flex;gap:10px;margin-top:14px}
-.mbtn{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:500;border:none}
+.mbtn{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:500;border:none;cursor:pointer}
 .mbtn.pri{background:var(--purple);color:#fff}
 .mbtn.sec{background:var(--surface2);color:var(--ink2)}
-
-/* ── NEW USER OVERLAY ── */
-.nuoverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.nuoverlay.open{display:flex}
-.numodal{background:var(--surface);border-radius:20px 20px 0 0;padding:24px 20px 36px;width:100%;max-width:520px;animation:slideUp .25s ease}
-.numodal h2{font-family:'Fraunces',serif;font-size:22px;font-weight:400;margin-bottom:6px}
-.numodal p{font-size:14px;color:var(--ink2);margin-bottom:14px;line-height:1.6}
-.numodal input{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;margin-bottom:10px;background:var(--surface)}
-.numodal input:focus{border-color:var(--accent)}
 .nu-emoji-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .nu-emoji{font-size:22px;padding:6px;border-radius:10px;border:2px solid transparent;cursor:pointer;background:var(--surface2)}
 .nu-emoji.sel{border-color:var(--accent)}
@@ -211,61 +184,7 @@ select.opt-chip{appearance:none;cursor:pointer}
 </head>
 <body>
 
-<!-- ══ SETUP SCREEN (shown if no Supabase keys) ══ -->
-<div id="setup-screen" style="display:none">
-  <h1>welcome 👋</h1>
-  <p>Before you start, connect your free Supabase database.<br>This takes about 3 minutes.</p>
-  <div class="setup-hint">
-    <strong>Quick setup:</strong><br>
-    1. Go to <a href="https://supabase.com" target="_blank">supabase.com</a> → create a free account<br>
-    2. Create a new project (any name, any region)<br>
-    3. Go to <strong>Project Settings → API</strong><br>
-    4. Copy your <code>Project URL</code> and <code>anon public</code> key<br>
-    5. Paste both below, then run the SQL setup
-  </div>
-  <div class="setup-field"><label>Supabase Project URL</label>
-    <input type="text" id="sb-url" placeholder="https://xxxx.supabase.co"/></div>
-  <div class="setup-field"><label>Supabase Anon Key</label>
-    <input type="password" id="sb-key" placeholder="eyJhbGciOi…"/></div>
-  <div class="setup-hint" style="margin-top:4px">
-    <strong>Also run this SQL once</strong> in Supabase → SQL Editor:<br><br>
-    <code style="display:block;white-space:pre-wrap;font-size:11px;line-height:1.6">create table if not exists users (
-  id uuid primary key default gen_random_uuid(),
-  username text unique not null,
-  pin text not null,
-  avatar text default '🙂',
-  color text default '#c84b31',
-  created_at timestamptz default now()
-);
-create table if not exists todos (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references users(id) on delete cascade,
-  text text not null, cat text, due date,
-  done boolean default false,
-  is_focus boolean default false,
-  created_at timestamptz default now()
-);
-create table if not exists meetings (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references users(id) on delete cascade,
-  time text not null, title text not null,
-  created_at timestamptz default now()
-);
-create table if not exists journal (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references users(id) on delete cascade,
-  entry_key text not null,
-  body text not null,
-  created_at timestamptz default now(),
-  unique(user_id, entry_key)
-);</code>
-  </div>
-  <button class="setup-btn-primary" onclick="saveSupabaseConfig()">connect & continue →</button>
-  <p class="setup-err" id="setup-err"></p>
-  <button onclick="resetConfig()" style="margin-top:16px;background:none;border:none;font-size:13px;color:var(--ink3);text-decoration:underline">clear saved keys & reset</button>
-</div>
-
-<!-- ══ LOGIN SCREEN ══ -->
+<!-- LOGIN -->
 <div id="login-screen" style="display:none">
   <div class="login-card">
     <h2>who's here?</h2>
@@ -281,11 +200,17 @@ create table if not exists journal (
   </div>
 </div>
 
-<!-- ══ MAIN APP ══ -->
+<!-- LOADING -->
+<div id="loading-screen" style="min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px">
+  <i class="ti ti-loader-2" style="font-size:36px;color:var(--accent);animation:spin 1.2s linear infinite"></i>
+  <p style="font-size:14px;color:var(--ink3)">loading…</p>
+</div>
+
+<!-- APP -->
 <div id="app" style="display:none">
   <div class="sync-bar">
     <div class="sync-dot" id="sync-dot"></div>
-    <span class="sync-label" id="sync-label">loading…</span>
+    <span id="sync-label">loading…</span>
     <button class="who-btn" onclick="switchUser()"><i class="ti ti-user" style="font-size:13px"></i><span id="who-name"></span></button>
   </div>
 
@@ -303,20 +228,20 @@ create table if not exists journal (
     <div class="today-banner">
       <div class="today-banner-hdr">
         <span><i class="ti ti-sun-high" style="color:var(--accent);font-size:15px"></i> today's focus</span>
-        <button style="background:none;border:none;font-size:12px;color:var(--accent);font-weight:500" onclick="clearFocus()">clear</button>
+        <button style="background:none;border:none;font-size:12px;color:var(--accent);font-weight:500;cursor:pointer" onclick="clearFocus()">clear</button>
       </div>
       <div class="today-items" id="today-items"></div>
       <button class="add-today-btn" onclick="pickFocusTasks()">+ mark a task for today</button>
     </div>
     <div class="add-bar">
       <input type="text" id="add-input" placeholder="add a new task…" maxlength="140"/>
-      <button class="add-btn" onclick="addTodo()" aria-label="Add task">
+      <button class="add-btn" onclick="addTodo()" aria-label="Add">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v12M2 8h12" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
       </button>
     </div>
     <div class="quick-opts">
-      <select class="opt-chip" id="cat-pick" aria-label="Category"><option value="">📂 category</option></select>
-      <input class="opt-chip" type="date" id="date-pick" aria-label="Due date"/>
+      <select class="opt-chip" id="cat-pick"><option value="">📂 category</option></select>
+      <input class="opt-chip" type="date" id="date-pick"/>
     </div>
     <div class="section">
       <div class="section-label">filter</div>
@@ -345,7 +270,7 @@ create table if not exists journal (
       </div>
       <textarea class="journal-ta" id="am-text" placeholder="write your intentions for today…"></textarea>
     </div>
-    <button class="journal-save" id="am-save" style="background:var(--amber)" onclick="saveJournalEntry('am')">save morning entry</button>
+    <button class="journal-save" style="background:var(--amber)" onclick="saveJournalEntry('am')">save morning entry</button>
     <div class="journal-card" style="margin-top:4px">
       <div class="jcard-hdr">
         <i class="ti ti-moon" style="color:#6b3fa0;font-size:18px"></i>
@@ -354,7 +279,7 @@ create table if not exists journal (
       </div>
       <textarea class="journal-ta" id="pm-text" placeholder="reflect on today's moments of gratitude…"></textarea>
     </div>
-    <button class="journal-save" id="pm-save" style="background:var(--purple)" onclick="saveJournalEntry('pm')">save evening entry</button>
+    <button class="journal-save" style="background:var(--purple)" onclick="saveJournalEntry('pm')">save evening entry</button>
     <div style="padding:14px 16px 0" id="past-entries"></div>
   </div>
 
@@ -400,8 +325,8 @@ create table if not exists journal (
 </div>
 
 <!-- Journal prompt modal -->
-<div class="joverlay" id="joverlay">
-  <div class="jmodal">
+<div class="overlay" id="joverlay">
+  <div class="modal">
     <h2 id="jm-title"></h2>
     <p id="jm-body"></p>
     <textarea id="jm-input" rows="4"></textarea>
@@ -413,10 +338,10 @@ create table if not exists journal (
 </div>
 
 <!-- New user modal -->
-<div class="nuoverlay" id="nuoverlay">
-  <div class="numodal">
+<div class="overlay" id="nuoverlay">
+  <div class="modal">
     <h2>add new user</h2>
-    <p>choose a name, emoji, and set a PIN</p>
+    <p>choose an emoji, name, and PIN</p>
     <div class="nu-emoji-row" id="nu-emoji-row"></div>
     <input type="text" id="nu-name" placeholder="your name (e.g. Aastha)" maxlength="20"/>
     <input type="password" id="nu-pin" placeholder="choose a PIN (4–6 digits)" maxlength="6" inputmode="numeric"/>
@@ -429,18 +354,7 @@ create table if not exists journal (
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-// CONFIG — paste your keys here OR use the UI
-// ══════════════════════════════════════════════
-let SUPABASE_URL = localStorage.getItem('sb_url') || '';
-let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
-
-let sb = null; // supabase client
-let currentUser = null;
-let todos = [], meetings = [], journalCache = {};
-let filter = 'all', compOpen = false;
-let syncTimeout = null;
-
+const API = '/.netlify/functions/api';
 const CATS = [
   {id:'work',    label:'work',     icon:'💼', color:'#2b5ea7', bg:'#e8f0fb'},
   {id:'personal',label:'personal', icon:'🏠', color:'#6b3fa0', bg:'#f0eaf9'},
@@ -450,6 +364,22 @@ const CATS = [
 ];
 const EMOJIS = ['🙂','😎','🤩','🧑','👩','👨','🦸','🧘','🎯','🌟','🐻','🦊'];
 const COLORS = ['#c84b31','#2b5ea7','#2d7a5e','#6b3fa0','#b06a0a','#a03060'];
+
+let currentUser = null;
+let todos = [], meetings = [], journalCache = {};
+let filter = 'all', compOpen = false;
+let nuEmoji = '🙂';
+
+// ── API PROXY ──────────────────────────────────
+async function sb(table, method='GET', body=null, filters=null){
+  const res = await fetch(API, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({table, method, body, filters})
+  });
+  const json = await res.json();
+  return json.data;
+}
 
 // ── UTILS ──────────────────────────────────────
 function todayStr(){return new Date().toISOString().slice(0,10)}
@@ -471,78 +401,62 @@ function setSyncStatus(state,label){
   document.getElementById('sync-label').textContent=label;
 }
 
-// ── SUPABASE SETUP ─────────────────────────────
-function initSupabase(){
-  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-}
-function saveSupabaseConfig(){
-  const url=document.getElementById('sb-url').value.trim();
-  const key=document.getElementById('sb-key').value.trim();
-  if(!url||!key){document.getElementById('setup-err').textContent='both fields required';return}
-  localStorage.setItem('sb_url',url);
-  localStorage.setItem('sb_key',key);
-  SUPABASE_URL=url; SUPABASE_KEY=key;
-  initSupabase();
-  document.getElementById('setup-screen').style.display='none';
-  showLoginScreen();
-}
-
 // ── BOOT ───────────────────────────────────────
 async function boot(){
-  if(!SUPABASE_URL||!SUPABASE_KEY){
-    document.getElementById('setup-screen').style.display='flex';
-    return;
-  }
-  initSupabase();
-  const savedId=localStorage.getItem('current_user_id');
+  const savedId = localStorage.getItem('current_user_id');
   if(savedId){
-    const {data}=await sb.from('users').select('*').eq('id',savedId).single();
-    if(data){currentUser=data; showApp(); return;}
+    const users = await sb('users','GET',null,{id:savedId});
+    if(users && users.length){
+      currentUser = users[0];
+      document.getElementById('loading-screen').style.display='none';
+      showApp();
+      return;
+    }
   }
+  document.getElementById('loading-screen').style.display='none';
   showLoginScreen();
 }
 
 // ── LOGIN ──────────────────────────────────────
-let selectedUserId=null;
+let selectedUserId = null;
 async function showLoginScreen(){
   document.getElementById('login-screen').style.display='flex';
-  const {data:users}=await sb.from('users').select('*').order('created_at');
-  const grid=document.getElementById('user-grid');
-  grid.innerHTML=(users||[]).map(u=>`
-    <div class="user-tile" data-id="${u.id}" data-color="${u.color}" onclick="selectUser('${u.id}','${u.color}')">
+  const users = await sb('users') || [];
+  const grid = document.getElementById('user-grid');
+  grid.innerHTML = users.map(u=>`
+    <div class="user-tile" data-id="${u.id}" onclick="selectUser('${u.id}')">
       <div class="user-avatar" style="background:${u.color}20">${u.avatar}</div>
       <div class="user-tile-name">${escHtml(u.username)}</div>
-    </div>`).join('')+`<div class="user-tile add-user-tile" onclick="openNewUser()">
+    </div>`).join('') + `
+    <div class="user-tile add-user-tile" onclick="openNewUser()">
       <div class="user-avatar" style="background:#f0eeea;font-size:24px">+</div>
       <div class="user-tile-name" style="color:var(--ink3)">add user</div>
     </div>`;
 }
-function selectUser(id,color){
-  selectedUserId=id;
+function selectUser(id){
+  selectedUserId = id;
   document.querySelectorAll('.user-tile').forEach(t=>t.classList.toggle('selected',t.dataset.id===id));
-  const pa=document.getElementById('pin-area');
-  pa.style.display='block';
+  document.getElementById('pin-area').style.display='block';
   document.getElementById('pin-input').value='';
   document.getElementById('login-err').textContent='';
   document.getElementById('pin-input').focus();
 }
 async function doLogin(){
   if(!selectedUserId){document.getElementById('login-err').textContent='pick a user first';return}
-  const pin=document.getElementById('pin-input').value.trim();
-  const {data}=await sb.from('users').select('*').eq('id',selectedUserId).eq('pin',pin).single();
-  if(!data){document.getElementById('login-err').textContent='wrong PIN, try again';return}
-  currentUser=data;
-  localStorage.setItem('current_user_id',data.id);
+  const pin = document.getElementById('pin-input').value.trim();
+  const users = await sb('users','GET',null,{id:selectedUserId,pin}) || [];
+  if(!users.length){document.getElementById('login-err').textContent='wrong PIN, try again';return}
+  currentUser = users[0];
+  localStorage.setItem('current_user_id', currentUser.id);
   document.getElementById('login-screen').style.display='none';
   showApp();
 }
 document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 
 // ── NEW USER ───────────────────────────────────
-let nuEmoji='🙂';
 function openNewUser(){
-  const row=document.getElementById('nu-emoji-row');
-  row.innerHTML=EMOJIS.map(e=>`<span class="nu-emoji${e===nuEmoji?' sel':''}" onclick="pickEmoji('${e}')">${e}</span>`).join('');
+  document.getElementById('nu-emoji-row').innerHTML = EMOJIS.map(e=>
+    `<span class="nu-emoji${e===nuEmoji?' sel':''}" onclick="pickEmoji('${e}')">${e}</span>`).join('');
   document.getElementById('nuoverlay').classList.add('open');
 }
 function closeNewUser(){document.getElementById('nuoverlay').classList.remove('open')}
@@ -551,16 +465,16 @@ function pickEmoji(e){
   document.querySelectorAll('.nu-emoji').forEach(el=>el.classList.toggle('sel',el.textContent===e));
 }
 async function createUser(){
-  console.log("creating user...");
-  const name=document.getElementById('nu-name').value.trim();
-  const pin=document.getElementById('nu-pin').value.trim();
-  const err=document.getElementById('nu-err');
+  const name = document.getElementById('nu-name').value.trim();
+  const pin = document.getElementById('nu-pin').value.trim();
+  const err = document.getElementById('nu-err');
   if(!name||pin.length<4){err.textContent='name + 4–6 digit PIN required';return}
-  const color=COLORS[Math.floor(Math.random()*COLORS.length)];
-  const {data:newUser, error}=await sb.from('users').insert({username:name,pin,avatar:nuEmoji,color}).select().single();
-  console.log("insert result:", JSON.stringify(newUser), JSON.stringify(error));
-  if(error){err.textContent="Error: "+error.message+" (code: "+error.code+")";console.error("full error:",error);return}
+  const color = COLORS[Math.floor(Math.random()*COLORS.length)];
+  const result = await sb('users','POST',{username:name,pin,avatar:nuEmoji,color});
+  if(!result||result.error){err.textContent='username taken, try another';return}
   closeNewUser();
+  document.getElementById('nu-name').value='';
+  document.getElementById('nu-pin').value='';
   showLoginScreen();
 }
 
@@ -591,12 +505,12 @@ function switchUser(){
 async function loadAll(){
   setSyncStatus('busy','loading…');
   try{
-    const [{data:t},{data:m},{data:j}]=await Promise.all([
-      sb.from('todos').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}),
-      sb.from('meetings').select('*').eq('user_id',currentUser.id).order('time'),
-      sb.from('journal').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false})
+    const [t,m,j] = await Promise.all([
+      sb('todos','GET',null,{user_id:currentUser.id}),
+      sb('meetings','GET',null,{user_id:currentUser.id}),
+      sb('journal','GET',null,{user_id:currentUser.id})
     ]);
-    todos=t||[]; meetings=m||[];
+    todos = t||[]; meetings = (m||[]).sort((a,b)=>a.time<b.time?-1:1);
     journalCache={};
     (j||[]).forEach(e=>journalCache[e.entry_key]=e.body);
     setSyncStatus('ok','synced');
@@ -606,8 +520,8 @@ async function loadAll(){
 
 // ── TASKS ──────────────────────────────────────
 function buildCatSelect(){
-  const s=document.getElementById('cat-pick');
-  s.innerHTML=`<option value="">📂 category</option>`+CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+  document.getElementById('cat-pick').innerHTML=`<option value="">📂 category</option>`+
+    CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
 }
 function buildCatFilter(){
   const el=document.getElementById('cat-filter');
@@ -641,9 +555,8 @@ function makeTodoEl(t,isDone){
 }
 function renderTodayBanner(){
   const focused=todos.filter(t=>t.is_focus&&!t.done);
-  const ti=document.getElementById('today-items');
-  ti.innerHTML=focused.length
-    ?focused.map(t=>`<div class="today-row${t.done?' done-t':''}"><div class="today-dot" style="background:${currentUser?.color||'var(--accent)'}"></div><span>${escHtml(t.text)}</span></div>`).join('')
+  document.getElementById('today-items').innerHTML=focused.length
+    ?focused.map(t=>`<div class="today-row"><div class="today-dot" style="background:${currentUser?.color||'var(--accent)'}"></div><span>${escHtml(t.text)}</span></div>`).join('')
     :`<div style="font-size:13px;color:var(--ink3);padding:0 0 4px">no tasks marked for today yet</div>`;
 }
 function render(){
@@ -671,19 +584,18 @@ async function addTodo(){
   const cat=document.getElementById('cat-pick').value||null;
   const due=document.getElementById('date-pick').value||null;
   const row={user_id:currentUser.id,text,cat,due:due||null,done:false,is_focus:false};
-  const {data}=await sb.from('todos').insert(row).select().single();
-  if(data) todos.unshift(data);
+  const result=await sb('todos','POST',row);
+  if(result&&!result.error) todos.unshift(Array.isArray(result)?result[0]:result);
   inp.value=''; document.getElementById('cat-pick').value=''; document.getElementById('date-pick').value='';
-  render(); inp.focus();
-  setSyncStatus('ok','saved');
+  render(); inp.focus(); setSyncStatus('ok','saved');
 }
 document.getElementById('add-input').addEventListener('keydown',e=>{if(e.key==='Enter')addTodo()});
 async function toggleTodo(t){
-  await sb.from('todos').update({done:!t.done}).eq('id',t.id);
+  await sb('todos','PATCH',{done:!t.done},{id:t.id});
   t.done=!t.done; render();
 }
 async function deleteTodo(id){
-  await sb.from('todos').delete().eq('id',id);
+  await sb('todos','DELETE',null,{id});
   todos=todos.filter(t=>t.id!==id); render();
 }
 async function pickFocusTasks(){
@@ -694,13 +606,13 @@ async function pickFocusTasks(){
   if(!pick) return;
   const ids=[];
   pick.split(',').forEach(s=>{const idx=parseInt(s.trim())-1;if(open[idx])ids.push(open[idx].id)});
-  await Promise.all(ids.map(id=>sb.from('todos').update({is_focus:true}).eq('id',id)));
+  await Promise.all(ids.map(id=>sb('todos','PATCH',{is_focus:true},{id})));
   ids.forEach(id=>{const t=todos.find(x=>x.id===id);if(t)t.is_focus=true});
   render();
 }
 async function clearFocus(){
   const ids=todos.filter(t=>t.is_focus).map(t=>t.id);
-  await Promise.all(ids.map(id=>sb.from('todos').update({is_focus:false}).eq('id',id)));
+  await Promise.all(ids.map(id=>sb('todos','PATCH',{is_focus:false},{id})));
   todos.forEach(t=>t.is_focus=false); render();
 }
 function toggleCompleted(){
@@ -715,8 +627,8 @@ async function addMeeting(){
   const time=document.getElementById('meet-time').value;
   const title=document.getElementById('meet-title').value.trim();
   if(!time||!title) return;
-  const {data}=await sb.from('meetings').insert({user_id:currentUser.id,time,title}).select().single();
-  if(data) meetings.push(data);
+  const result=await sb('meetings','POST',{user_id:currentUser.id,time,title});
+  if(result) meetings.push(Array.isArray(result)?result[0]:result);
   meetings.sort((a,b)=>a.time<b.time?-1:1);
   renderMeetings(); document.getElementById('meet-title').value='';
 }
@@ -732,7 +644,7 @@ function renderMeetings(){
     </div>`).join('');
 }
 async function deleteMeeting(id){
-  await sb.from('meetings').delete().eq('id',id);
+  await sb('meetings','DELETE',null,{id});
   meetings=meetings.filter(m=>m.id!==id); renderMeetings();
 }
 
@@ -758,7 +670,13 @@ async function saveJournalEntry(type){
   const key=`${type}_${todayStr()}`;
   const body=document.getElementById(`${type}-text`).value.trim();
   if(!body) return;
-  await sb.from('journal').upsert({user_id:currentUser.id,entry_key:key,body},{onConflict:'user_id,entry_key'});
+  // Try update first, then insert
+  const existing=await sb('journal','GET',null,{user_id:currentUser.id,entry_key:key});
+  if(existing&&existing.length){
+    await sb('journal','PATCH',{body},{id:existing[0].id});
+  } else {
+    await sb('journal','POST',{user_id:currentUser.id,entry_key:key,body});
+  }
   journalCache[key]=body;
   const btn=document.getElementById(`${type}-save`);
   const orig=btn.textContent; btn.textContent='✓ saved!';
@@ -781,9 +699,8 @@ Wake: ${fmt12(wake)}, Bedtime: ${fmt12(sleep)}
 Today's focus tasks: ${focusList}
 All open tasks: ${taskList}
 Meetings: ${meetList}
-Return ONLY a JSON array (no markdown, no extra text):
-[{"time":"7:00am","title":"...","desc":"...","type":"break|meeting|task"},...]
-Put meetings at exact times. Schedule tasks in 45–90 min focus blocks. Include meals and short breaks.`;
+Return ONLY a JSON array (no markdown): [{"time":"7:00am","title":"...","desc":"...","type":"break|meeting|task"},...]
+Put meetings at exact times. 45-90 min focus blocks. Include meals and short breaks.`;
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',headers:{'Content-Type':'application/json'},
@@ -813,8 +730,8 @@ function showScreen(s){
   document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
   document.getElementById('s-'+s).classList.add('active');
   document.getElementById('nav-'+s).classList.add('active');
-  if(s==='journal'){renderJournal()}
-  if(s==='planner'){renderMeetings()}
+  if(s==='journal') renderJournal();
+  if(s==='planner') renderMeetings();
 }
 
 // ── DAILY PROMPTS ──────────────────────────────
@@ -840,36 +757,26 @@ function openJModal(title,body,placeholder,key){
   document.getElementById('joverlay').classList.add('open'); inp.focus();
   document.getElementById('jm-save').onclick=async()=>{
     const v=inp.value.trim();
-    if(v){
-      await sb.from('journal').upsert({user_id:currentUser.id,entry_key:key,body:v},{onConflict:'user_id,entry_key'});
-      journalCache[key]=v;
-    }
+    if(v) await saveJournalEntry(key.startsWith('am')?'am':'pm');
     closeJModal(); showScreen('journal');
   };
 }
 function closeJModal(){document.getElementById('joverlay').classList.remove('open')}
 function checkPrompts(){
   if(!currentUser) return;
-  const h=new Date().getHours(), td=todayStr();
+  const h=new Date().getHours(), td=todayStr(), uid=currentUser.id;
   const amKey=`am_${td}`, pmKey=`pm_${td}`;
-  const uid=currentUser.id;
-  if(h>=6&&h<10&&!sessionStorage.getItem(`am_shown_${uid}_${td}`)&&!journalCache[amKey]){
-    sessionStorage.setItem(`am_shown_${uid}_${td}`,'1');
+  if(h>=6&&h<10&&!sessionStorage.getItem(`am_${uid}_${td}`)&&!journalCache[amKey]){
+    sessionStorage.setItem(`am_${uid}_${td}`,'1');
     playChime();
-    setTimeout(()=>openJModal('good morning ☀️','what do you want to accomplish today?','your intentions for today…',amKey),500);
-  } else if(h>=21&&!sessionStorage.getItem(`pm_shown_${uid}_${td}`)&&!journalCache[pmKey]){
-    sessionStorage.setItem(`pm_shown_${uid}_${td}`,'1');
+    setTimeout(()=>openJModal('good morning ☀️','what do you want to accomplish today?','your intentions…',amKey),500);
+  } else if(h>=21&&!sessionStorage.getItem(`pm_${uid}_${td}`)&&!journalCache[pmKey]){
+    sessionStorage.setItem(`pm_${uid}_${td}`,'1');
     playChime();
     setTimeout(()=>openJModal('good evening 🌙','what are you grateful for today?','reflect on today…',pmKey),500);
   }
 }
 
-// Clear config and reload
-function resetConfig(){
-  localStorage.clear();
-  sessionStorage.clear();
-  location.reload();
-}
 boot();
 </script>
 </body>
