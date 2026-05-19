@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <title>my tasks</title>
+<link rel="manifest" href="/manifest.json"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -17,7 +18,13 @@
   --green:#2d7a5e;--blue:#2b5ea7;--amber:#b06a0a;--purple:#6b3fa0;
   --radius:14px;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+[data-dark="1"]{
+  --ink:#e8e6e0;--ink2:#a8a6c0;--ink3:#6a6888;
+  --bg:#12121e;--surface:#1e1e2e;--surface2:#25253a;
+  --accent:#e05a3a;--accent2:#d07050;
+  --green:#3a9a74;--amber:#c87a1a;--purple:#8a5fc0;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden;transition:background .25s,color .25s}
 h1{font-family:'Fraunces',serif;font-size:26px;font-weight:400}
 button{cursor:pointer;font-family:'DM Sans',sans-serif}
 input,select,textarea{font-family:'DM Sans',sans-serif}
@@ -47,6 +54,7 @@ input,select,textarea{font-family:'DM Sans',sans-serif}
 .sync-dot.err{background:#c0392b}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .who-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:3px 10px;font-size:11px;color:var(--ink2);font-weight:500;display:flex;align-items:center;gap:5px;margin-left:auto}
+.dark-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:2px 7px;font-size:15px;color:var(--ink2);line-height:1.4;margin-left:4px;flex-shrink:0}
 
 /* NAV */
 .nav{display:flex;background:var(--surface);border-top:.5px solid #e5e2dd;position:fixed;bottom:0;left:0;right:0;z-index:50;padding:6px 0 env(safe-area-inset-bottom,10px)}
@@ -83,12 +91,20 @@ input,select,textarea{font-family:'DM Sans',sans-serif}
 .add-bar input{flex:1;border:none;outline:none;font-size:15px;color:var(--ink);background:transparent;padding:8px 0}
 .add-bar input::placeholder{color:var(--ink3)}
 .add-btn{background:var(--accent);color:#fff;border:none;border-radius:10px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.quick-opts{margin:6px 16px 10px;display:flex;gap:8px;flex-wrap:wrap}
+.quick-opts{margin:6px 16px 4px;display:flex;gap:8px;flex-wrap:wrap}
 .opt-chip{padding:5px 11px;border-radius:8px;font-size:12px;font-weight:500;border:1px solid #ddd;background:var(--surface);color:var(--ink2)}
 select.opt-chip{appearance:none;cursor:pointer}
 
+/* SEARCH BAR */
+.search-bar{margin:0 16px 0;background:var(--surface);border-radius:10px;border:1.5px solid #e5e2dd;padding:2px 10px;display:flex;align-items:center;gap:8px;transition:border-color .2s}
+.search-bar:focus-within{border-color:var(--accent)}
+.search-bar i{color:var(--ink3);font-size:15px;flex-shrink:0}
+.search-bar input{flex:1;border:none;outline:none;font-size:13px;color:var(--ink);background:transparent;padding:8px 0}
+.search-bar input::placeholder{color:var(--ink3)}
+.search-clear{background:none;border:none;color:var(--ink3);font-size:13px;padding:2px 4px;display:none;flex-shrink:0}
+
 /* CAT FILTER */
-.section{padding:12px 16px 0}
+.section{padding:10px 16px 0}
 .section-label{font-size:11px;font-weight:500;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;margin-bottom:8px}
 .cat-scroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .cat-scroll::-webkit-scrollbar{display:none}
@@ -107,7 +123,8 @@ select.opt-chip{appearance:none;cursor:pointer}
 .check svg{display:none;width:12px;height:12px}
 .check.checked svg{display:block}
 .todo-body{flex:1;min-width:0}
-.todo-text{font-size:15px;line-height:1.4;color:var(--ink);word-break:break-word}
+.todo-text{font-size:15px;line-height:1.4;color:var(--ink);word-break:break-word;cursor:pointer}
+.todo-text:hover{color:var(--accent)}
 .todo-meta{display:flex;align-items:center;gap:6px;margin-top:5px;flex-wrap:wrap}
 .cat-badge{font-size:11px;font-weight:500;padding:2px 9px;border-radius:999px}
 .due-badge{font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:3px}
@@ -147,6 +164,7 @@ select.opt-chip{appearance:none;cursor:pointer}
 .mtitle{flex:1;color:var(--ink2)}
 .mdel{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer}
 .gen-btn{width:100%;background:#1a3a5c;color:#fff;border:none;border-radius:var(--radius);padding:13px;font-size:15px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.save-tasks-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:11px;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;margin-top:12px}
 .sched-block{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
 .stime{font-size:12px;font-weight:500;color:var(--ink3);min-width:48px;text-align:right;padding-top:3px}
 .sline{display:flex;flex-direction:column;align-items:center}
@@ -171,15 +189,29 @@ select.opt-chip{appearance:none;cursor:pointer}
 .modal p{font-size:14px;color:var(--ink2);margin-bottom:12px;line-height:1.6}
 .modal textarea{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:12px 14px;font-size:14px;color:var(--ink);outline:none;resize:none;line-height:1.6;background:var(--surface);min-height:90px}
 .modal textarea:focus{border-color:var(--purple)}
-.modal input{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;margin-bottom:10px;background:var(--surface)}
+.modal input[type=text],.modal input[type=password]{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;margin-bottom:10px;background:var(--surface)}
 .modal input:focus{border-color:var(--accent)}
 .modal-btns{display:flex;gap:10px;margin-top:14px}
 .mbtn{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:500;border:none;cursor:pointer}
 .mbtn.pri{background:var(--purple);color:#fff}
+.mbtn.pri.green{background:var(--green)}
 .mbtn.sec{background:var(--surface2);color:var(--ink2)}
 .nu-emoji-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .nu-emoji{font-size:22px;padding:6px;border-radius:10px;border:2px solid transparent;cursor:pointer;background:var(--surface2)}
 .nu-emoji.sel{border-color:var(--accent)}
+
+/* FOCUS PICKER */
+.focus-task-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;margin-bottom:4px}
+.focus-task-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;border:1.5px solid #e5e2dd;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface)}
+.focus-task-row.picked{border-color:var(--accent);background:#fff8f6}
+.focus-task-row .ftxt{font-size:14px;color:var(--ink);flex:1;line-height:1.4}
+.focus-task-row .fcheck{width:18px;height:18px;border-radius:50%;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:10px;color:#fff}
+.focus-task-row.picked .fcheck{background:var(--accent);border-color:var(--accent)}
+
+/* EDIT TASK MODAL */
+.edit-fields{display:flex;gap:8px;margin-bottom:10px}
+.edit-fields select,.edit-fields input[type=date]{flex:1;border:1.5px solid #e5e2dd;border-radius:10px;padding:10px 12px;font-size:13px;outline:none;background:var(--surface);color:var(--ink);appearance:none}
+.edit-fields select:focus,.edit-fields input[type=date]:focus{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -213,6 +245,7 @@ select.opt-chip{appearance:none;cursor:pointer}
     <div class="sync-dot" id="sync-dot"></div>
     <span id="sync-label">loading…</span>
     <button class="who-btn" onclick="switchUser()"><i class="ti ti-user" style="font-size:13px"></i><span id="who-name"></span></button>
+    <button class="dark-btn" id="dark-btn" onclick="toggleDark()" title="toggle dark mode">🌙</button>
   </div>
 
   <!-- Tasks -->
@@ -244,6 +277,11 @@ select.opt-chip{appearance:none;cursor:pointer}
       <select class="opt-chip" id="cat-pick"><option value="">📂 category</option></select>
       <input class="opt-chip" type="date" id="date-pick"/>
     </div>
+    <div class="search-bar">
+      <i class="ti ti-search"></i>
+      <input type="text" id="search-input" placeholder="search tasks…" oninput="onSearch(this.value)" autocomplete="off"/>
+      <button class="search-clear" id="search-clear" onclick="clearSearch()">✕</button>
+    </div>
     <div class="section">
       <div class="section-label">filter</div>
       <div class="cat-scroll" id="cat-filter"></div>
@@ -271,7 +309,7 @@ select.opt-chip{appearance:none;cursor:pointer}
       </div>
       <textarea class="journal-ta" id="am-text" placeholder="write your intentions for today…"></textarea>
     </div>
-    <button class="journal-save" style="background:var(--amber)" onclick="saveJournalEntry('am')">save morning entry</button>
+    <button class="journal-save" id="am-save" style="background:var(--amber)" onclick="saveJournalEntry('am')">save morning entry</button>
     <div class="journal-card" style="margin-top:4px">
       <div class="jcard-hdr">
         <i class="ti ti-moon" style="color:#6b3fa0;font-size:18px"></i>
@@ -280,7 +318,7 @@ select.opt-chip{appearance:none;cursor:pointer}
       </div>
       <textarea class="journal-ta" id="pm-text" placeholder="reflect on today's moments of gratitude…"></textarea>
     </div>
-    <button class="journal-save" style="background:var(--purple)" onclick="saveJournalEntry('pm')">save evening entry</button>
+    <button class="journal-save" id="pm-save" style="background:var(--purple)" onclick="saveJournalEntry('pm')">save evening entry</button>
     <div style="padding:14px 16px 0" id="past-entries"></div>
   </div>
 
@@ -303,10 +341,10 @@ select.opt-chip{appearance:none;cursor:pointer}
       <div class="section-label">wake up & wind down</div>
       <div style="display:flex;gap:8px">
         <div style="flex:1"><div style="font-size:12px;color:var(--ink3);margin-bottom:4px">wake up</div>
-          <input type="time" id="wake-time" value="07:00" style="width:100%;border:1px solid #ddd;border-radius:10px;padding:8px 10px;font-size:13px;outline:none"/>
+          <input type="time" id="wake-time" value="07:00" style="width:100%;border:1px solid #ddd;border-radius:10px;padding:8px 10px;font-size:13px;outline:none;background:var(--surface);color:var(--ink)"/>
         </div>
         <div style="flex:1"><div style="font-size:12px;color:var(--ink3);margin-bottom:4px">sleep</div>
-          <input type="time" id="sleep-time" value="22:00" style="width:100%;border:1px solid #ddd;border-radius:10px;padding:8px 10px;font-size:13px;outline:none"/>
+          <input type="time" id="sleep-time" value="22:00" style="width:100%;border:1px solid #ddd;border-radius:10px;padding:8px 10px;font-size:13px;outline:none;background:var(--surface);color:var(--ink)"/>
         </div>
       </div>
     </div>
@@ -371,6 +409,35 @@ select.opt-chip{appearance:none;cursor:pointer}
   </div>
 </div>
 
+<!-- Focus picker modal -->
+<div class="overlay" id="focusoverlay">
+  <div class="modal">
+    <h2>today's focus</h2>
+    <p>tap tasks to mark them for today</p>
+    <div class="focus-task-list" id="focus-task-list"></div>
+    <div class="modal-btns">
+      <button class="mbtn sec" onclick="closeFocusModal()">cancel</button>
+      <button class="mbtn pri green" onclick="saveFocusPicks()">save →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit task modal -->
+<div class="overlay" id="editoverlay">
+  <div class="modal">
+    <h2>edit task</h2>
+    <input type="text" id="edit-text" maxlength="140" placeholder="task text…"/>
+    <div class="edit-fields">
+      <select id="edit-cat"><option value="">📂 no category</option></select>
+      <input type="date" id="edit-due"/>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn sec" onclick="closeEditModal()">cancel</button>
+      <button class="mbtn pri green" onclick="saveEdit()">save →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const API = '/.netlify/functions/api';
 const CATS = [
@@ -387,6 +454,10 @@ let currentUser = null;
 let todos = [], meetings = [], journalCache = {};
 let filter = 'all', compOpen = false;
 let nuEmoji = '🙂';
+let searchQuery = '';
+let focusPicks = new Set();
+let editingTodo = null;
+let lastGeneratedBlocks = [];
 
 // ── API PROXY ──────────────────────────────────
 async function sb(table, method='GET', body=null, filters=null){
@@ -419,8 +490,23 @@ function setSyncStatus(state,label){
   document.getElementById('sync-label').textContent=label;
 }
 
+// ── DARK MODE ──────────────────────────────────
+function toggleDark(){
+  const on = document.documentElement.dataset.dark === '1';
+  document.documentElement.dataset.dark = on ? '' : '1';
+  document.getElementById('dark-btn').textContent = on ? '🌙' : '☀️';
+  localStorage.setItem('dark', on ? '' : '1');
+}
+function initDark(){
+  if(localStorage.getItem('dark') === '1'){
+    document.documentElement.dataset.dark = '1';
+    document.getElementById('dark-btn').textContent = '☀️';
+  }
+}
+
 // ── BOOT ───────────────────────────────────────
 async function boot(){
+  initDark();
   const savedId = localStorage.getItem('current_user_id');
   if(savedId){
     const users = await sb('users','GET',null,{id:savedId});
@@ -511,11 +597,11 @@ async function showApp(){
   document.getElementById('tasks-greeting').textContent=`${currentUser.avatar} ${currentUser.username}'s tasks`;
   document.getElementById('tasks-header').style.background=currentUser.color||'var(--accent)';
   document.getElementById('who-name').textContent=currentUser.username;
-  buildCatSelect();
+  buildCatSelects();
   await loadAll();
   checkPrompts();
   setInterval(checkPrompts,60000);
-  setInterval(loadAll,30000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadAll()});
 }
 function switchUser(){
   currentUser=null;
@@ -542,9 +628,10 @@ async function loadAll(){
 }
 
 // ── TASKS ──────────────────────────────────────
-function buildCatSelect(){
-  document.getElementById('cat-pick').innerHTML=`<option value="">📂 category</option>`+
-    CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+function buildCatSelects(){
+  const opts = CATS.map(c=>`<option value="${c.id}">${c.icon} ${c.label}</option>`).join('');
+  document.getElementById('cat-pick').innerHTML=`<option value="">📂 category</option>`+opts;
+  document.getElementById('edit-cat').innerHTML=`<option value="">📂 no category</option>`+opts;
 }
 function buildCatFilter(){
   const el=document.getElementById('cat-filter');
@@ -562,7 +649,7 @@ function makeTodoEl(t,isDone){
       <svg viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5L11 1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div class="todo-body">
-      <div class="todo-text">${escHtml(t.text)}</div>
+      <div class="todo-text" title="tap to edit">${escHtml(t.text)}</div>
       <div class="todo-meta">
         ${cat?`<span class="cat-badge" style="background:${cat.bg};color:${cat.color}">${cat.icon} ${cat.label}</span>`:''}
         ${t.due?`<span class="due-badge${ov?' overdue':tod?' today-d':''}"><i class="ti ti-calendar-event" style="font-size:11px"></i>${fmtDate(t.due)}</span>`:''}
@@ -573,6 +660,7 @@ function makeTodoEl(t,isDone){
   const chk=div.querySelector('.check');
   chk.addEventListener('click',()=>toggleTodo(t));
   chk.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter')toggleTodo(t)});
+  div.querySelector('.todo-text').addEventListener('click',()=>openEditModal(t));
   div.querySelector('.del-btn').addEventListener('click',()=>deleteTodo(t.id));
   return div;
 }
@@ -586,10 +674,12 @@ function render(){
   buildCatFilter(); renderTodayBanner();
   const al=document.getElementById('active-list'), dl=document.getElementById('done-list');
   al.innerHTML=''; dl.innerHTML='';
-  const active=todos.filter(t=>!t.done&&(filter==='all'||t.cat===filter));
-  const done=todos.filter(t=>t.done&&(filter==='all'||t.cat===filter));
+  const q=searchQuery.toLowerCase();
+  const matchesSearch=t=>!q||t.text.toLowerCase().includes(q);
+  const active=todos.filter(t=>!t.done&&(filter==='all'||t.cat===filter)&&matchesSearch(t));
+  const done=todos.filter(t=>t.done&&(filter==='all'||t.cat===filter)&&matchesSearch(t));
   if(!active.length){
-    al.innerHTML=`<div class="empty"><i class="ti ti-checkbox" style="font-size:36px;display:block;margin-bottom:8px;opacity:.3"></i><p style="font-size:14px">all clear!</p></div>`;
+    al.innerHTML=`<div class="empty"><i class="ti ti-checkbox" style="font-size:36px;display:block;margin-bottom:8px;opacity:.3"></i><p style="font-size:14px">${q?'no matching tasks':'all clear!'}</p></div>`;
   } else {
     active.sort((a,b)=>{if(!a.due&&!b.due)return 0;if(!a.due)return 1;if(!b.due)return-1;return a.due<b.due?-1:1});
     active.forEach(t=>al.appendChild(makeTodoEl(t,false)));
@@ -601,6 +691,20 @@ function render(){
   document.getElementById('stat-done').textContent=todos.filter(t=>t.done).length;
   document.getElementById('stat-due').textContent=todos.filter(t=>!t.done&&isToday(t.due)).length;
 }
+
+// ── SEARCH ─────────────────────────────────────
+function onSearch(val){
+  searchQuery=val;
+  document.getElementById('search-clear').style.display=val?'block':'none';
+  render();
+}
+function clearSearch(){
+  searchQuery='';
+  document.getElementById('search-input').value='';
+  document.getElementById('search-clear').style.display='none';
+  render();
+}
+
 async function addTodo(){
   const inp=document.getElementById('add-input');
   const text=inp.value.trim(); if(!text) return;
@@ -621,18 +725,69 @@ async function deleteTodo(id){
   await sb('todos','DELETE',null,{id});
   todos=todos.filter(t=>t.id!==id); render();
 }
-async function pickFocusTasks(){
-  const open=todos.filter(t=>!t.done&&!t.is_focus);
-  if(!open.length){alert('No more open tasks!');return}
-  const opts=open.map((t,i)=>`${i+1}. ${t.text}`).join('\n');
-  const pick=prompt('Pick task numbers (comma-separated):\n\n'+opts);
-  if(!pick) return;
-  const ids=[];
-  pick.split(',').forEach(s=>{const idx=parseInt(s.trim())-1;if(open[idx])ids.push(open[idx].id)});
-  await Promise.all(ids.map(id=>sb('todos','PATCH',{is_focus:true},{id})));
-  ids.forEach(id=>{const t=todos.find(x=>x.id===id);if(t)t.is_focus=true});
-  render();
+
+// ── EDIT TASK ──────────────────────────────────
+function openEditModal(t){
+  editingTodo=t;
+  document.getElementById('edit-text').value=t.text;
+  document.getElementById('edit-cat').value=t.cat||'';
+  document.getElementById('edit-due').value=t.due||'';
+  document.getElementById('editoverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('edit-text').focus(),50);
 }
+function closeEditModal(){
+  document.getElementById('editoverlay').classList.remove('open');
+  editingTodo=null;
+}
+async function saveEdit(){
+  if(!editingTodo) return;
+  const text=document.getElementById('edit-text').value.trim();
+  if(!text) return;
+  const cat=document.getElementById('edit-cat').value||null;
+  const due=document.getElementById('edit-due').value||null;
+  await sb('todos','PATCH',{text,cat,due},{id:editingTodo.id});
+  const t=todos.find(x=>x.id===editingTodo.id);
+  if(t){t.text=text;t.cat=cat;t.due=due;}
+  closeEditModal(); render(); setSyncStatus('ok','saved');
+}
+document.getElementById('edit-text').addEventListener('keydown',e=>{if(e.key==='Enter')saveEdit()});
+
+// ── FOCUS PICKER ───────────────────────────────
+function pickFocusTasks(){
+  const open=todos.filter(t=>!t.done&&!t.is_focus);
+  if(!open.length) return;
+  focusPicks=new Set();
+  document.getElementById('focus-task-list').innerHTML=open.map(t=>`
+    <div class="focus-task-row" data-id="${t.id}" onclick="toggleFocusPick(this,'${t.id}')">
+      <div class="fcheck"></div>
+      <div class="ftxt">${escHtml(t.text)}</div>
+    </div>`).join('');
+  document.getElementById('focusoverlay').classList.add('open');
+}
+function toggleFocusPick(el,id){
+  if(focusPicks.has(id)){
+    focusPicks.delete(id);
+    el.classList.remove('picked');
+    el.querySelector('.fcheck').textContent='';
+  } else {
+    focusPicks.add(id);
+    el.classList.add('picked');
+    el.querySelector('.fcheck').textContent='✓';
+  }
+}
+function closeFocusModal(){
+  document.getElementById('focusoverlay').classList.remove('open');
+  focusPicks=new Set();
+}
+async function saveFocusPicks(){
+  const ids=[...focusPicks];
+  if(ids.length){
+    await Promise.all(ids.map(id=>sb('todos','PATCH',{is_focus:true},{id})));
+    ids.forEach(id=>{const t=todos.find(x=>x.id===id);if(t)t.is_focus=true});
+  }
+  closeFocusModal(); render();
+}
+
 async function clearFocus(){
   const ids=todos.filter(t=>t.is_focus).map(t=>t.id);
   await Promise.all(ids.map(id=>sb('todos','PATCH',{is_focus:false},{id})));
@@ -693,7 +848,6 @@ async function saveJournalEntry(type){
   const key=`${type}_${todayStr()}`;
   const body=document.getElementById(`${type}-text`).value.trim();
   if(!body) return;
-  // Try update first, then insert
   const existing=await sb('journal','GET',null,{user_id:currentUser.id,entry_key:key});
   if(existing&&existing.length){
     await sb('journal','PATCH',{body},{id:existing[0].id});
@@ -717,7 +871,7 @@ async function generatePlan(){
   const taskList=todos.filter(t=>!t.done).map(t=>`- ${t.text}${t.due?' (due '+fmtDate(t.due)+')':''}`).join('\n')||'(no tasks)';
   const focusList=todos.filter(t=>t.is_focus&&!t.done).map(t=>`- ${t.text}`).join('\n')||'(none marked)';
   const meetList=meetings.map(m=>`- ${fmt12(m.time)}: ${m.title}`).join('\n')||'(no meetings)';
-  const prompt=`You are a productivity coach. Create a realistic time-blocked schedule.
+  const aiPrompt=`You are a productivity coach. Create a realistic time-blocked schedule.
 Wake: ${fmt12(wake)}, Bedtime: ${fmt12(sleep)}
 Today's focus tasks: ${focusList}
 All open tasks: ${taskList}
@@ -725,26 +879,46 @@ Meetings: ${meetList}
 Return ONLY a JSON array (no markdown): [{"time":"7:00am","title":"...","desc":"...","type":"break|meeting|task"},...]
 Put meetings at exact times. 45-90 min focus blocks. Include meals and short breaks.`;
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    const data = await sb('__ai','POST',{
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1000,
+      messages:[{role:'user',content:aiPrompt}]
     });
-    const data=await res.json();
     const raw=data.content.find(c=>c.type==='text')?.text||'[]';
-    const blocks=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    out.innerHTML=blocks.map((b,i)=>`
-      <div class="sched-block">
-        <div class="stime">${escHtml(b.time||'')}</div>
-        <div class="sline"><div class="sdot" style="background:${b.type==='meeting'?'#1a3a5c':b.type==='break'?'var(--green)':'var(--accent)'}"></div>${i<blocks.length-1?'<div class="sbar"></div>':''}</div>
-        <div class="scard ${b.type==='meeting'?'m-blk':b.type==='break'?'b-blk':'t-blk'}">
-          <div class="stitle">${escHtml(b.title||'')}</div>
-          ${b.desc?`<div class="sdesc">${escHtml(b.desc)}</div>`:''}
-        </div>
-      </div>`).join('');
+    lastGeneratedBlocks=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    renderSchedule(lastGeneratedBlocks);
   }catch(e){
     out.innerHTML=`<div class="loading-ai"><i class="ti ti-alert-circle"></i><p style="color:#c0392b;font-size:14px">couldn't generate — try again</p></div>`;
   }
   btn.disabled=false;
+}
+function renderSchedule(blocks){
+  const out=document.getElementById('schedule-out');
+  out.innerHTML=blocks.map((b,i)=>`
+    <div class="sched-block">
+      <div class="stime">${escHtml(b.time||'')}</div>
+      <div class="sline"><div class="sdot" style="background:${b.type==='meeting'?'#1a3a5c':b.type==='break'?'var(--green)':'var(--accent)'}"></div>${i<blocks.length-1?'<div class="sbar"></div>':''}</div>
+      <div class="scard ${b.type==='meeting'?'m-blk':b.type==='break'?'b-blk':'t-blk'}">
+        <div class="stitle">${escHtml(b.title||'')}</div>
+        ${b.desc?`<div class="sdesc">${escHtml(b.desc)}</div>`:''}
+      </div>
+    </div>`).join('');
+  const taskCount=blocks.filter(b=>b.type==='task').length;
+  if(taskCount>0){
+    out.innerHTML+=`<button class="save-tasks-btn" onclick="saveScheduleAsTasks()"><i class="ti ti-playlist-add"></i> add ${taskCount} task${taskCount>1?'s':''} to my list</button>`;
+  }
+}
+async function saveScheduleAsTasks(){
+  const taskBlocks=lastGeneratedBlocks.filter(b=>b.type==='task');
+  const today=todayStr();
+  await Promise.all(taskBlocks.map(b=>
+    sb('todos','POST',{user_id:currentUser.id,text:b.title,cat:null,due:today,done:false,is_focus:false})
+      .then(r=>{if(r&&!r.error)todos.unshift(Array.isArray(r)?r[0]:r)})
+  ));
+  render();
+  const btn=document.querySelector('.save-tasks-btn');
+  if(btn){btn.textContent='✓ tasks added!';btn.disabled=true;}
+  setSyncStatus('ok','saved');
 }
 
 // ── SCREEN NAV ─────────────────────────────────
@@ -806,14 +980,11 @@ function openResetPin(){
     document.getElementById('login-err').textContent='pick a user first';
     return;
   }
-  // Load the user's secret question
   sb('users','GET',null,{id:selectedUserId}).then(users=>{
     if(!users||!users.length) return;
     const user = users[0];
-    document.getElementById('reset-question-text').textContent = 
-      `Answer your secret question to reset your PIN:
-
-"${user.secret_question}"`;
+    document.getElementById('reset-question-text').textContent =
+      `Answer your secret question to reset your PIN:\n\n"${user.secret_question}"`;
     document.getElementById('reset-answer-input').value='';
     document.getElementById('reset-new-pin').value='';
     document.getElementById('reset-err').textContent='';
@@ -830,13 +1001,11 @@ async function doResetPin(){
   const err = document.getElementById('reset-err');
   if(!answer){err.textContent='please enter your secret answer';return}
   if(newPin.length < 4){err.textContent='PIN must be 4–6 digits';return}
-  // Verify secret answer
   const users = await sb('users','GET',null,{id:selectedUserId,secret_answer:answer});
   if(!users||!users.length){
     err.textContent='wrong answer, try again';
     return;
   }
-  // Update PIN
   await sb('users','PATCH',{pin:newPin},{id:selectedUserId});
   closeResetPin();
   document.getElementById('pin-input').value='';

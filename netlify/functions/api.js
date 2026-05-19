@@ -1,5 +1,6 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
 
 exports.handler = async (event) => {
   const headers = {
@@ -15,10 +16,24 @@ exports.handler = async (event) => {
 
   try {
     const { table, method, body, filters } = JSON.parse(event.body || '{}');
-    
+
+    // AI proxy — keeps the Anthropic key server-side
+    if (table === '__ai') {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': ANTHROPIC_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      return { statusCode: res.status, headers, body: JSON.stringify({ data }) };
+    }
+
     let url = `${SUPABASE_URL}/rest/v1/${table}`;
-    
-    // Build query string from filters
+
     if (filters && Object.keys(filters).length > 0) {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, val]) => {
@@ -27,7 +42,6 @@ exports.handler = async (event) => {
       url += '?' + params.toString();
     }
 
-    // For select, add select=* if no filters handle it
     if (method === 'GET' && (!filters || !filters.select)) {
       url += (url.includes('?') ? '&' : '?') + 'select=*';
     }
@@ -36,7 +50,7 @@ exports.handler = async (event) => {
       'Content-Type': 'application/json',
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Prefer': method === 'POST' ? 'return=representation' : 
+      'Prefer': method === 'POST' ? 'return=representation' :
                 method === 'PATCH' ? 'return=representation' : ''
     };
 
