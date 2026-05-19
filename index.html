@@ -54,7 +54,7 @@ input,select,textarea{font-family:'DM Sans',sans-serif}
 .sync-dot.err{background:#c0392b}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .who-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:3px 10px;font-size:11px;color:var(--ink2);font-weight:500;display:flex;align-items:center;gap:5px;margin-left:auto}
-.dark-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:2px 7px;font-size:15px;color:var(--ink2);line-height:1.4;margin-left:4px;flex-shrink:0}
+.dark-btn,.install-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:2px 7px;font-size:15px;color:var(--ink2);line-height:1.4;margin-left:4px;flex-shrink:0}
 
 /* NAV */
 .nav{display:flex;background:var(--surface);border-top:.5px solid #e5e2dd;position:fixed;bottom:0;left:0;right:0;z-index:50;padding:6px 0 env(safe-area-inset-bottom,10px)}
@@ -246,6 +246,7 @@ select.opt-chip{appearance:none;cursor:pointer}
     <span id="sync-label">loading…</span>
     <button class="who-btn" onclick="switchUser()"><i class="ti ti-user" style="font-size:13px"></i><span id="who-name"></span></button>
     <button class="dark-btn" id="dark-btn" onclick="toggleDark()" title="toggle dark mode">🌙</button>
+    <button class="install-btn" id="install-btn" onclick="installApp()" title="install app" style="display:none">📲</button>
   </div>
 
   <!-- Tasks -->
@@ -1010,6 +1011,27 @@ async function doResetPin(){
   closeResetPin();
   document.getElementById('pin-input').value='';
   document.getElementById('login-err').textContent='PIN reset! enter your new PIN to log in';
+}
+
+// ── SERVICE WORKER & INSTALL ───────────────────
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('install-btn').style.display = 'block';
+});
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  document.getElementById('install-btn').style.display = 'none';
+});
+async function installApp(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if(outcome === 'accepted') deferredInstallPrompt = null;
+}
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
 }
 
 boot();
