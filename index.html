@@ -326,8 +326,8 @@ select.opt-chip{appearance:none;cursor:pointer}
   <!-- Planner -->
   <div id="s-planner" class="screen">
     <div class="header" style="background:#1a3a5c">
-      <h1 style="color:#fff">ai day planner</h1>
-      <p style="color:rgba(255,255,255,.7);font-size:13px;margin-top:3px">let claude schedule your day</p>
+      <h1 style="color:#fff">day planner</h1>
+      <p style="color:rgba(255,255,255,.7);font-size:13px;margin-top:3px">smart schedule from your tasks & meetings</p>
     </div>
     <div style="padding:14px 16px 0">
       <div class="section-label">add meetings</div>
@@ -350,8 +350,10 @@ select.opt-chip{appearance:none;cursor:pointer}
       </div>
     </div>
     <div style="padding:12px 16px 0">
+      <div class="section-label">what's going into the plan</div>
+      <div id="plan-context" style="background:var(--surface);border:1px solid #ece9e4;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
       <button class="gen-btn" id="gen-btn" onclick="generatePlan()">
-        <i class="ti ti-sparkles"></i> generate my day plan
+        <i class="ti ti-calendar-event"></i> build my day plan
       </button>
     </div>
     <div id="schedule-out" style="padding:14px 16px 0"></div>
@@ -862,36 +864,90 @@ async function saveJournalEntry(type){
 }
 
 // ── AI PLANNER ─────────────────────────────────
-async function generatePlan(){
-  const btn=document.getElementById('gen-btn');
-  const out=document.getElementById('schedule-out');
-  btn.disabled=true;
-  out.innerHTML=`<div class="loading-ai"><i class="ti ti-loader-2"></i><p style="font-size:14px">claude is planning your day…</p></div>`;
+function renderPlanContext(){
+  const todayTasks=todos.filter(t=>!t.done&&(t.is_focus||isToday(t.due)));
+  const otherTasks=todos.filter(t=>!t.done&&!t.is_focus&&!isToday(t.due));
+  const ctx=document.getElementById('plan-context');
+  if(!ctx) return;
+  ctx.innerHTML=[
+    `<div><strong style="color:var(--ink)">📅 meetings:</strong> ${meetings.length?meetings.map(m=>`${fmt12(m.time)} ${escHtml(m.title)}`).join(', '):'<span style="color:var(--ink3)">none added</span>'}</div>`,
+    `<div><strong style="color:var(--ink)">⭐ priority tasks:</strong> ${todayTasks.length?todayTasks.map(t=>escHtml(t.text)).join(', '):'<span style="color:var(--ink3)">none</span>'}</div>`,
+    otherTasks.length?`<div style="color:var(--ink3)">+ ${otherTasks.length} other open task${otherTasks.length>1?'s':''}</div>`:''
+  ].join('');
+}
+function findFreeSlot(fixed, target, dur, maxEnd){
+  let t=target;
+  while(t+dur<=maxEnd){
+    const hit=fixed.find(b=>b.s<t+dur&&b.e>t);
+    if(!hit) return t;
+    t=hit.e+15;
+  }
+  return null;
+}
+function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks){
+  const toMins=t=>{const[h,m]=t.split(':').map(Number);return h*60+m;};
+  const fmtT=mins=>{const h=Math.floor(mins/60)%24,m=mins%60;return`${h%12||12}:${String(m).padStart(2,'0')}${h>=12?'pm':'am'}`;};
+  const wake=toMins(wakeStr), sleep=toMins(sleepStr);
+  const tasks=[...priorityTasks,...otherTasks];
+  const fixed=[];
+
+  // Morning routine + breakfast
+  fixed.push({s:wake,e:wake+20,title:'morning routine',desc:'wake up & get ready',type:'break'});
+  fixed.push({s:wake+20,e:wake+50,title:'breakfast',desc:'',type:'break'});
+
+  // Meetings at their exact times (assume 1 hour each)
+  meetingList.slice().sort((a,b)=>toMins(a.time)-toMins(b.time)).forEach(m=>{
+    const s=toMins(m.time);
+    if(s>=wake&&s<sleep) fixed.push({s,e:Math.min(s+60,sleep),title:m.title,desc:'',type:'meeting'});
+  });
+
+  // Lunch: target 11:30am, minimum 3h after wake
+  const lunchTarget=Math.max(11*60+30,wake+180);
+  const lunchAt=findFreeSlot(fixed,lunchTarget,45,sleep-90);
+  if(lunchAt!==null) fixed.push({s:lunchAt,e:lunchAt+45,title:'lunch break',desc:'step away from the screen',type:'break'});
+
+  // Dinner: 6:30pm, skip if too close to lunch or sleep
+  const dinnerTarget=18*60+30;
+  if(dinnerTarget>(lunchAt||0)+90&&dinnerTarget+45<sleep-30){
+    const dinnerAt=findFreeSlot(fixed,dinnerTarget,45,sleep-30);
+    if(dinnerAt!==null) fixed.push({s:dinnerAt,e:dinnerAt+45,title:'dinner',desc:'',type:'break'});
+  }
+
+  // Wind down
+  if(sleep>wake+60) fixed.push({s:sleep-30,e:sleep,title:'wind down',desc:'reflect & prepare for tomorrow',type:'break'});
+
+  fixed.sort((a,b)=>a.s-b.s);
+
+  // Walk the timeline and fill gaps with tasks
+  const out=[];
+  let taskIdx=0, cursor=wake;
+  for(const blk of fixed){
+    if(blk.s>cursor){
+      let pos=cursor;
+      while(pos<blk.s-25&&taskIdx<tasks.length){
+        const avail=blk.s-pos;
+        const dur=avail>=90?90:avail>=60?60:avail>=45?45:0;
+        if(!dur) break;
+        out.push({time:fmtT(pos),title:tasks[taskIdx],desc:`${dur} min focus block`,type:'task'});
+        pos+=dur; taskIdx++;
+        if(pos<blk.s-20&&taskIdx<tasks.length){
+          out.push({time:fmtT(pos),title:'short break',desc:'10 min rest',type:'break'});
+          pos+=10;
+        }
+      }
+    }
+    out.push({time:fmtT(blk.s),title:blk.title,desc:blk.desc,type:blk.type});
+    cursor=blk.e;
+  }
+  return out;
+}
+function generatePlan(){
   const wake=document.getElementById('wake-time').value||'07:00';
   const sleep=document.getElementById('sleep-time').value||'22:00';
-  const taskList=todos.filter(t=>!t.done).map(t=>`- ${t.text}${t.due?' (due '+fmtDate(t.due)+')':''}`).join('\n')||'(no tasks)';
-  const focusList=todos.filter(t=>t.is_focus&&!t.done).map(t=>`- ${t.text}`).join('\n')||'(none marked)';
-  const meetList=meetings.map(m=>`- ${fmt12(m.time)}: ${m.title}`).join('\n')||'(no meetings)';
-  const aiPrompt=`You are a productivity coach. Create a realistic time-blocked schedule.
-Wake: ${fmt12(wake)}, Bedtime: ${fmt12(sleep)}
-Today's focus tasks: ${focusList}
-All open tasks: ${taskList}
-Meetings: ${meetList}
-Return ONLY a JSON array (no markdown): [{"time":"7:00am","title":"...","desc":"...","type":"break|meeting|task"},...]
-Put meetings at exact times. 45-90 min focus blocks. Include meals and short breaks.`;
-  try{
-    const data = await sb('__ai','POST',{
-      model:'claude-sonnet-4-20250514',
-      max_tokens:1000,
-      messages:[{role:'user',content:aiPrompt}]
-    });
-    const raw=data.content.find(c=>c.type==='text')?.text||'[]';
-    lastGeneratedBlocks=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    renderSchedule(lastGeneratedBlocks);
-  }catch(e){
-    out.innerHTML=`<div class="loading-ai"><i class="ti ti-alert-circle"></i><p style="color:#c0392b;font-size:14px">couldn't generate — try again</p></div>`;
-  }
-  btn.disabled=false;
+  const priorityTasks=todos.filter(t=>!t.done&&(t.is_focus||isToday(t.due))).map(t=>t.text);
+  const otherTasks=todos.filter(t=>!t.done&&!t.is_focus&&!isToday(t.due)).map(t=>t.text);
+  lastGeneratedBlocks=runScheduler(wake,sleep,meetings,priorityTasks,otherTasks);
+  renderSchedule(lastGeneratedBlocks);
 }
 function renderSchedule(blocks){
   const out=document.getElementById('schedule-out');
@@ -929,7 +985,7 @@ function showScreen(s){
   document.getElementById('s-'+s).classList.add('active');
   document.getElementById('nav-'+s).classList.add('active');
   if(s==='journal') renderJournal();
-  if(s==='planner') renderMeetings();
+  if(s==='planner'){renderMeetings();renderPlanContext();}
 }
 
 // ── DAILY PROMPTS ──────────────────────────────

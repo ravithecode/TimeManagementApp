@@ -19,6 +19,9 @@ exports.handler = async (event) => {
 
     // AI proxy — keeps the Anthropic key server-side
     if (table === '__ai') {
+      if (!ANTHROPIC_KEY) {
+        return { statusCode: 500, headers, body: JSON.stringify({ data: { error: { message: 'ANTHROPIC_KEY not set in Netlify environment variables' } } }) };
+      }
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
