@@ -444,7 +444,8 @@ select.opt-chip{appearance:none;cursor:pointer}
 </div>
 
 <script>
-const API = '/.netlify/functions/api';
+const SUPABASE_URL = 'https://qjpaknovbdpuzxlwkdgy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcGFrbm92YmRwdXp4bHdrZGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODk0NDIsImV4cCI6MjA5NDY2NTQ0Mn0.Ob1inmX8xUMAJbwe9FFASzv2E5rE9zr22rwRQTEOdjU';
 const CATS = [
   {id:'work',    label:'work',     icon:'💼', color:'#2b5ea7', bg:'#e8f0fb'},
   {id:'personal',label:'personal', icon:'🏠', color:'#6b3fa0', bg:'#f0eaf9'},
@@ -464,15 +465,29 @@ let focusPicks = new Set();
 let editingTodo = null;
 let lastGeneratedBlocks = [];
 
-// ── API PROXY ──────────────────────────────────
+// ── SUPABASE ───────────────────────────────────
 async function sb(table, method='GET', body=null, filters=null){
-  const res = await fetch(API, {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({table, method, body, filters})
+  let url=`${SUPABASE_URL}/rest/v1/${table}`;
+  if(filters&&Object.keys(filters).length){
+    const p=new URLSearchParams();
+    Object.entries(filters).forEach(([k,v])=>p.append(k,`eq.${v}`));
+    url+='?'+p.toString();
+  }
+  if(method==='GET'&&(!filters||!filters.select))
+    url+=(url.includes('?')?'&':'?')+'select=*';
+  const res=await fetch(url,{
+    method:method||'GET',
+    headers:{
+      'Content-Type':'application/json',
+      'apikey':SUPABASE_KEY,
+      'Authorization':`Bearer ${SUPABASE_KEY}`,
+      'Prefer':method==='POST'||method==='PATCH'?'return=representation':''
+    },
+    body:['POST','PATCH','PUT'].includes(method)?JSON.stringify(body):undefined
   });
-  const json = await res.json();
-  return json.data;
+  if(method==='DELETE') return null;
+  const text=await res.text();
+  try{return JSON.parse(text);}catch(e){return text;}
 }
 
 // ── UTILS ──────────────────────────────────────
