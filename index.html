@@ -6,9 +6,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <title>my tasks</title>
-<link rel="manifest" href="/manifest.json"/>
-<link rel="icon" href="/icon.svg" type="image/svg+xml"/>
-<link rel="shortcut icon" href="/icon.svg"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" href="icon.svg" type="image/svg+xml"/>
+<link rel="shortcut icon" href="icon.svg"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -1129,7 +1129,7 @@ async function installApp(){
   if(outcome === 'accepted') deferredInstallPrompt = null;
 }
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 
 boot();
