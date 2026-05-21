@@ -1,5 +1,5 @@
-const CACHE = 'mytasks-v3';
-const SHELL = ['/', '/index.html', '/icon.svg', '/manifest.json'];
+const CACHE = 'mytasks-v4';
+const SHELL = ['./', './index.html', './icon.svg', './manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
