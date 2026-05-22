@@ -247,6 +247,14 @@ select.opt-chip{appearance:none;cursor:pointer}
 .mbtn.pri{background:var(--purple);color:#fff}
 .mbtn.pri.green{background:var(--green)}
 .mbtn.sec{background:var(--surface2);color:var(--ink2)}
+.notif-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:.5px solid #e5e2dd}
+.notif-row:last-of-type{border-bottom:none}
+.toggle-sw{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle-sw input{opacity:0;width:0;height:0}
+.toggle-sw span{position:absolute;inset:0;background:#ccc;border-radius:24px;cursor:pointer;transition:.2s}
+.toggle-sw span:before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle-sw input:checked+span{background:var(--green)}
+.toggle-sw input:checked+span:before{transform:translateX(20px)}
 .nu-emoji-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .nu-emoji{font-size:22px;padding:6px;border-radius:10px;border:2px solid transparent;cursor:pointer;background:var(--surface2)}
 .nu-emoji.sel{border-color:var(--accent)}
@@ -396,6 +404,7 @@ select.opt-chip{appearance:none;cursor:pointer}
     <span id="sync-label">loading…</span>
     <button class="who-btn" onclick="switchUser()"><i class="ti ti-user" style="font-size:13px"></i><span id="who-name"></span></button>
     <button class="dark-btn" id="dark-btn" onclick="toggleDark()" title="toggle dark mode">🌙</button>
+    <button class="dark-btn" id="notif-btn" onclick="openNotifModal()" title="notification settings" style="display:none">🔔</button>
     <button class="install-btn" id="install-btn" onclick="installApp()" title="install app" style="display:none">📲</button>
   </div>
 
@@ -768,6 +777,47 @@ select.opt-chip{appearance:none;cursor:pointer}
   </div>
 </div>
 
+<!-- Notification settings modal -->
+<div class="overlay" id="notif-overlay" onclick="if(event.target===this)closeNotifModal()">
+  <div class="modal">
+    <h2>🔔 notifications</h2>
+    <p style="font-size:13px;color:var(--ink3);margin-bottom:12px">push reminders — works best when app is installed on home screen</p>
+    <div id="notif-perm-msg" style="display:none;font-size:13px;color:#c84b31;margin-bottom:10px"></div>
+    <div class="notif-row">
+      <div>
+        <div style="font-weight:600;font-size:14px">🌅 morning check-in</div>
+        <div style="font-size:12px;color:var(--ink3)">7am daily intentions</div>
+      </div>
+      <label class="toggle-sw"><input type="checkbox" id="notif-morning" onchange="saveNotifPrefs()"><span></span></label>
+    </div>
+    <div class="notif-row">
+      <div>
+        <div style="font-weight:600;font-size:14px">🌿 midday habits</div>
+        <div style="font-size:12px;color:var(--ink3)">12pm habit reminder</div>
+      </div>
+      <label class="toggle-sw"><input type="checkbox" id="notif-habits" onchange="saveNotifPrefs()"><span></span></label>
+    </div>
+    <div class="notif-row">
+      <div>
+        <div style="font-weight:600;font-size:14px">🌙 evening wind-down</div>
+        <div style="font-size:12px;color:var(--ink3)">9pm reflection nudge</div>
+      </div>
+      <label class="toggle-sw"><input type="checkbox" id="notif-evening" onchange="saveNotifPrefs()"><span></span></label>
+    </div>
+    <div class="notif-row">
+      <div>
+        <div style="font-weight:600;font-size:14px">⚠️ overdue tasks</div>
+        <div style="font-size:12px;color:var(--ink3)">include count in morning</div>
+      </div>
+      <label class="toggle-sw"><input type="checkbox" id="notif-overdue" onchange="saveNotifPrefs()"><span></span></label>
+    </div>
+    <div id="notif-status" style="font-size:12px;color:var(--ink3);text-align:center;margin-top:8px"></div>
+    <div class="modal-btns">
+      <button class="mbtn sec" onclick="closeNotifModal()">done</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit task modal -->
 <div class="overlay" id="editoverlay">
   <div class="modal">
@@ -786,6 +836,7 @@ select.opt-chip{appearance:none;cursor:pointer}
 
 <script>
 const SUPABASE_URL = 'https://qjpaknovbdpuzxlwkdgy.supabase.co';
+const VAPID_PUBLIC_KEY = 'BLIv6UfHHYiSUT1edCa5a2l7SkeWDLp3oYrEBFrvjWiw7Y4jlsyUGyOnlxwOmQLSIh5-_4NIhWSOCUGF9Xc1y9k';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFqcGFrbm92YmRwdXp4bHdrZGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwODk0NDIsImV4cCI6MjA5NDY2NTQ0Mn0.Ob1inmX8xUMAJbwe9FFASzv2E5rE9zr22rwRQTEOdjU';
 const CATS = [
   {id:'work',    label:'work',     icon:'💼', color:'#2b5ea7', bg:'#e8f0fb'},
@@ -1014,6 +1065,7 @@ async function showApp(){
   document.getElementById('tasks-header').style.background=currentUser.color||'var(--accent)';
   document.getElementById('who-name').textContent=currentUser.username;
   buildCatSelects();
+  initNotifButton();
   await loadAll();
   loadDailyFact();
   checkPrompts();
@@ -1951,6 +2003,92 @@ async function saveAddHabit(){
   habits.push(Array.isArray(r)?r[0]:r);
   closeAddHabit();
   renderHabitsScreen(); renderTodayScreen();
+}
+
+// ── PUSH NOTIFICATIONS ─────────────────────────
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - b64.length % 4) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+function openNotifModal() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    document.getElementById('notif-perm-msg').textContent = 'push notifications are not supported in this browser';
+    document.getElementById('notif-perm-msg').style.display = 'block';
+  }
+  const prefs = JSON.parse(localStorage.getItem('notif_prefs') || '{}');
+  ['morning','habits','evening','overdue'].forEach(k => {
+    document.getElementById('notif-'+k).checked = !!prefs[k];
+  });
+  document.getElementById('notif-status').textContent = '';
+  document.getElementById('notif-overlay').classList.add('open');
+}
+function closeNotifModal() {
+  document.getElementById('notif-overlay').classList.remove('open');
+}
+
+async function saveNotifPrefs() {
+  const statusEl = document.getElementById('notif-status');
+  const permMsg = document.getElementById('notif-perm-msg');
+  permMsg.style.display = 'none';
+
+  const prefs = {
+    notif_morning: document.getElementById('notif-morning').checked,
+    notif_habits:  document.getElementById('notif-habits').checked,
+    notif_evening: document.getElementById('notif-evening').checked,
+    notif_overdue: document.getElementById('notif-overdue').checked,
+  };
+  const anyOn = Object.values(prefs).some(Boolean);
+
+  if (!anyOn) {
+    localStorage.setItem('notif_prefs', JSON.stringify({
+      morning: false, habits: false, evening: false, overdue: false
+    }));
+    statusEl.textContent = 'notifications off';
+    return;
+  }
+
+  if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+    permMsg.textContent = 'push not supported in this browser';
+    permMsg.style.display = 'block';
+    return;
+  }
+
+  let perm = Notification.permission;
+  if (perm === 'default') perm = await Notification.requestPermission();
+  if (perm !== 'granted') {
+    permMsg.textContent = 'permission denied — enable notifications in browser settings';
+    permMsg.style.display = 'block';
+    return;
+  }
+
+  statusEl.textContent = 'saving…';
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+    await fetch('/.netlify/functions/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: currentUser.id, subscription: sub.toJSON(), prefs })
+    });
+    localStorage.setItem('notif_prefs', JSON.stringify({
+      morning: prefs.notif_morning, habits: prefs.notif_habits,
+      evening: prefs.notif_evening, overdue: prefs.notif_overdue
+    }));
+    statusEl.textContent = '✓ saved';
+  } catch (err) {
+    statusEl.textContent = 'could not save (works on Netlify only)';
+  }
+}
+
+function initNotifButton() {
+  if ('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window) {
+    document.getElementById('notif-btn').style.display = 'block';
+  }
 }
 
 // ── SERVICE WORKER & INSTALL ───────────────────

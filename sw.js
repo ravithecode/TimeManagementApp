@@ -1,4 +1,4 @@
-const CACHE = 'mytasks-v8';
+const CACHE = 'mytasks-v9';
 const SHELL = ['./', './index.html', './icon.svg', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -14,6 +14,31 @@ self.addEventListener('activate', e => {
     caches.keys()
       .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
       .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('push', e => {
+  let data = { title: 'mytasks', body: 'you have a reminder', icon: '/icon.svg', badge: '/icon.svg', tag: 'reminder', data: { url: '/' } };
+  try { if (e.data) data = { ...data, ...JSON.parse(e.data.text()) }; } catch {}
+  e.waitUntil(self.registration.showNotification(data.title, {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    tag: data.tag,
+    data: data.data
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/';
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if (c.url.includes(self.location.origin) && 'focus' in c) return c.focus();
+      }
+      return clients.openWindow(url);
+    })
   );
 });
 

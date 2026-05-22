@@ -1,0 +1,19 @@
+{
+  "name": "timemanagementapp",
+  "version": "1.0.0",
+  "description": "App to do time management",
+  "main": "sw.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:39981/git/ravithecode/TimeManagementApp"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

@@ -19,3 +19,12 @@
   for = "/sw.js"
   [headers.values]
     Cache-Control = "no-cache"
+
+[functions."push-morning"]
+  schedule = "0 12 * * *"
+
+[functions."push-midday"]
+  schedule = "0 17 * * *"
+
+[functions."push-evening"]
+  schedule = "0 2 * * *"
