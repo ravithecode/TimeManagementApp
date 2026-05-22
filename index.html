@@ -366,17 +366,20 @@ select.opt-chip{appearance:none;cursor:pointer}
 <!-- LOGIN -->
 <div id="login-screen" style="display:none">
   <div class="login-card">
-    <h2>who's here?</h2>
-    <p>pick your name to continue</p>
-    <div class="user-grid" id="user-grid"></div>
-    <div id="pin-area" style="display:none">
-      <div class="pin-row">
+    <h2>welcome</h2>
+    <p id="login-sub">enter your username to continue</p>
+    <input type="text" id="login-username" placeholder="username" maxlength="30" autocomplete="username" style="width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;margin-bottom:8px;background:var(--surface)"/>
+    <div id="login-pin-area" style="display:none">
+      <div class="pin-row" style="margin-bottom:8px">
         <input type="password" id="pin-input" maxlength="6" placeholder="enter your PIN" inputmode="numeric"/>
       </div>
-      <button class="login-btn" onclick="doLogin()">let me in →</button>
-      <p class="login-err" id="login-err"></p>
-      <button onclick="openResetPin()" style="background:none;border:none;font-size:12px;color:var(--ink3);text-decoration:underline;margin-top:6px;cursor:pointer;width:100%;text-align:center">forgot PIN?</button>
     </div>
+    <div id="login-new-area" style="display:none">
+      <input type="password" id="nu-pin-simple" placeholder="choose a PIN (4–6 digits)" maxlength="6" inputmode="numeric" class="pin-row" style="width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:11px 14px;font-size:15px;color:var(--ink);outline:none;margin-bottom:8px;background:var(--surface)"/>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLoginNew()">continue →</button>
+    <p class="login-err" id="login-err"></p>
+    <button id="forgot-pin-btn" onclick="openResetPin()" style="display:none;background:none;border:none;font-size:12px;color:var(--ink3);text-decoration:underline;margin-top:6px;cursor:pointer;width:100%;text-align:center">forgot PIN?</button>
   </div>
 </div>
 
@@ -898,40 +901,77 @@ async function boot(){
 }
 
 // ── LOGIN ──────────────────────────────────────
-let selectedUserId = null;
-async function showLoginScreen(){
+let selectedUserId = null, loginFoundUser = null, loginState = 'username';
+
+function showLoginScreen(){
   document.getElementById('login-screen').style.display='flex';
-  const users = await sb('users') || [];
-  const grid = document.getElementById('user-grid');
-  grid.innerHTML = users.map(u=>`
-    <div class="user-tile" data-id="${u.id}" onclick="selectUser('${u.id}')">
-      <div class="user-avatar" style="background:${u.color}20">${u.avatar}</div>
-      <div class="user-tile-name">${escHtml(u.username)}</div>
-    </div>`).join('') + `
-    <div class="user-tile add-user-tile" onclick="openNewUser()">
-      <div class="user-avatar" style="background:#f0eeea;font-size:24px">+</div>
-      <div class="user-tile-name" style="color:var(--ink3)">add user</div>
-    </div>`;
-}
-function selectUser(id){
-  selectedUserId = id;
-  document.querySelectorAll('.user-tile').forEach(t=>t.classList.toggle('selected',t.dataset.id===id));
-  document.getElementById('pin-area').style.display='block';
+  loginFoundUser=null; loginState='username';
+  document.getElementById('login-username').value='';
   document.getElementById('pin-input').value='';
+  document.getElementById('login-pin-area').style.display='none';
+  document.getElementById('login-new-area').style.display='none';
+  document.getElementById('forgot-pin-btn').style.display='none';
+  document.getElementById('login-btn').textContent='continue →';
+  document.getElementById('login-btn').style.background='';
+  document.getElementById('login-sub').textContent='enter your username to continue';
   document.getElementById('login-err').textContent='';
-  document.getElementById('pin-input').focus();
+  setTimeout(()=>document.getElementById('login-username').focus(),100);
 }
-async function doLogin(){
-  if(!selectedUserId){document.getElementById('login-err').textContent='pick a user first';return}
-  const pin = document.getElementById('pin-input').value.trim();
-  const users = await sb('users','GET',null,{id:selectedUserId,pin}) || [];
-  if(!users.length){document.getElementById('login-err').textContent='wrong PIN, try again';return}
-  currentUser = users[0];
-  localStorage.setItem('current_user_id', currentUser.id);
-  document.getElementById('login-screen').style.display='none';
-  showApp();
+
+async function doLoginNew(){
+  const username=document.getElementById('login-username').value.trim();
+  const err=document.getElementById('login-err');
+  err.textContent='';
+
+  if(loginState==='username'){
+    if(!username){err.textContent='enter a username first';return;}
+    const users=await sb('users')||[];
+    const found=users.find(u=>u.username.toLowerCase()===username.toLowerCase());
+    if(found){
+      loginFoundUser=found; selectedUserId=found.id; loginState='pin';
+      document.getElementById('login-pin-area').style.display='block';
+      document.getElementById('forgot-pin-btn').style.display='block';
+      document.getElementById('login-btn').textContent='sign in →';
+      document.getElementById('login-sub').textContent=`hi ${escHtml(found.username)}! enter your PIN`;
+      setTimeout(()=>document.getElementById('pin-input').focus(),50);
+    } else {
+      loginState='new';
+      document.getElementById('login-new-area').style.display='block';
+      document.getElementById('login-btn').textContent='create account →';
+      document.getElementById('login-btn').style.background='var(--green)';
+      document.getElementById('login-sub').textContent=`"${escHtml(username)}" is new — choose a PIN to get started`;
+      setTimeout(()=>document.getElementById('nu-pin-simple').focus(),50);
+    }
+    return;
+  }
+
+  if(loginState==='pin'){
+    const pin=document.getElementById('pin-input').value.trim();
+    if(!pin){err.textContent='enter your PIN';return;}
+    const users=await sb('users','GET',null,{id:loginFoundUser.id,pin})||[];
+    if(!users.length){err.textContent='wrong PIN, try again';return;}
+    currentUser=users[0];
+    localStorage.setItem('current_user_id',currentUser.id);
+    document.getElementById('login-screen').style.display='none';
+    showApp();
+    return;
+  }
+
+  if(loginState==='new'){
+    if(!username){err.textContent='enter a username first';return;}
+    const pin=document.getElementById('nu-pin-simple').value.trim();
+    if(pin.length<4){err.textContent='PIN must be 4–6 digits';return;}
+    const color=COLORS[Math.floor(Math.random()*COLORS.length)];
+    const result=await sb('users','POST',{username,pin,avatar:'🙂',color,secret_question:'n/a',secret_answer:'n/a'});
+    if(!result||result.error){err.textContent='username taken, try another';return;}
+    currentUser=Array.isArray(result)?result[0]:result;
+    localStorage.setItem('current_user_id',currentUser.id);
+    document.getElementById('login-screen').style.display='none';
+    showApp();
+  }
 }
-document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLoginNew();});
+document.getElementById('login-username').addEventListener('keydown',e=>{if(e.key==='Enter')doLoginNew();});
 
 // ── NEW USER ───────────────────────────────────
 function openNewUser(){
@@ -1597,7 +1637,7 @@ function checkPrompts(){
 // ── RESET PIN ──────────────────────────────────
 function openResetPin(){
   if(!selectedUserId){
-    document.getElementById('login-err').textContent='pick a user first';
+    document.getElementById('login-err').textContent='enter your username first';
     return;
   }
   sb('users','GET',null,{id:selectedUserId}).then(users=>{
