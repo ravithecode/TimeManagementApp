@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>feature mockup</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1a1a2e;--ink2:#4a4a6a;--ink3:#8888aa;
+  --bg:#faf9f6;--surface:#fff;--surface2:#f3f1ee;
+  --accent:#c84b31;--accent2:#e8835a;
+  --green:#2d7a5e;--blue:#2b5ea7;--amber:#b06a0a;--purple:#6b3fa0;
+  --teal:#1a7a7a;--radius:14px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+h1{font-family:'Fraunces',serif;font-size:26px;font-weight:400}
+button{cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* PHONE FRAME */
+.phone{max-width:390px;margin:32px auto;background:var(--bg);border-radius:40px;box-shadow:0 24px 80px rgba(0,0,0,.18);overflow:hidden;position:relative;border:8px solid #1a1a2e}
+.tab-bar{display:flex;gap:0;background:#f0eeea;border-bottom:1px solid #e0ddd8;padding:0 12px}
+.tab{flex:1;padding:10px 4px;font-size:12px;font-weight:500;background:none;border:none;color:var(--ink3);border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* SYNC BAR */
+.sync-bar{background:var(--surface);border-bottom:.5px solid #e5e2dd;padding:6px 16px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink3)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+.who-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:3px 10px;font-size:11px;color:var(--ink2);font-weight:500;display:flex;align-items:center;gap:5px;margin-left:auto}
+
+/* HEADER */
+.header{color:#fff;padding:22px 20px 16px;position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08)}
+.header p{font-size:13px;opacity:.8;margin-top:3px}
+
+/* NAV */
+.nav{display:flex;background:var(--surface);border-top:.5px solid #e5e2dd;padding:6px 0 12px;position:sticky;bottom:0}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;font-size:10px;font-weight:500;color:var(--ink3);padding:4px 0;letter-spacing:.04em;text-transform:uppercase}
+.nav-btn i{font-size:20px}
+.nav-btn.active{color:var(--accent)}
+
+/* SCREENS */
+.screen{display:none;padding-bottom:80px}
+.screen.active{display:block}
+
+/* ── HABIT TRACKER ── */
+.habit-header-stats{display:flex;gap:8px;margin-top:14px}
+.habit-stat{background:rgba(255,255,255,.15);border-radius:10px;padding:8px 14px;font-size:12px;color:#fff;font-weight:500}
+.habit-stat span{display:block;font-size:20px;font-weight:500;font-family:'Fraunces',serif;line-height:1}
+
+.week-strip{margin:14px 16px 0;background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;padding:12px 14px}
+.week-strip-label{font-size:11px;font-weight:500;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;margin-bottom:10px}
+.week-days{display:flex;gap:6px;justify-content:space-between}
+.week-day{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.wd-label{font-size:10px;color:var(--ink3);font-weight:500}
+.wd-bar{height:36px;width:100%;border-radius:6px;background:var(--surface2);position:relative;overflow:hidden}
+.wd-fill{position:absolute;bottom:0;left:0;right:0;background:var(--teal);border-radius:6px;transition:height .3s}
+.wd-pct{font-size:10px;color:var(--ink3);font-weight:500}
+.wd-bar.today .wd-fill{background:var(--accent)}
+
+.section-label{font-size:11px;font-weight:500;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;margin-bottom:8px}
+.habits-section{padding:14px 16px 0}
+
+.habit-row{background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;padding:12px 14px;margin-bottom:8px}
+.habit-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.habit-emoji{font-size:20px;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.habit-info{flex:1}
+.habit-name{font-size:15px;font-weight:500;color:var(--ink)}
+.habit-streak{font-size:12px;color:var(--ink3);display:flex;align-items:center;gap:3px;margin-top:2px}
+.habit-streak b{color:var(--amber);font-weight:600}
+.habit-checks{display:flex;gap:5px;justify-content:space-between}
+.hcheck{flex:1;height:32px;border-radius:8px;border:1.5px solid #e5e2dd;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--ink3);font-weight:500;cursor:pointer;transition:all .15s;background:var(--surface);flex-direction:column;gap:1px}
+.hcheck.done{background:var(--teal);border-color:var(--teal);color:#fff}
+.hcheck.today{border-color:var(--accent);color:var(--accent)}
+.hcheck.today.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.hcheck-day{font-size:9px;opacity:.7}
+.hcheck-mark{font-size:12px}
+
+.add-habit-btn{margin:0 16px;width:calc(100% - 32px);background:var(--surface);border:1.5px dashed #d0cdc8;border-radius:var(--radius);padding:12px;font-size:14px;color:var(--ink3);display:flex;align-items:center;justify-content:center;gap:8px}
+.add-habit-btn:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ── WEEKLY REVIEW ── */
+.review-card{margin:14px 16px 0;background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;overflow:hidden}
+.review-card-hdr{padding:12px 16px;border-bottom:.5px solid #ece9e4;display:flex;align-items:center;gap:8px}
+.review-card-hdr span{font-size:14px;font-weight:500;color:var(--ink)}
+.review-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#ece9e4}
+.review-stat-cell{background:var(--surface);padding:14px 16px;text-align:center}
+.review-stat-cell .val{font-family:'Fraunces',serif;font-size:28px;font-weight:400;color:var(--ink);line-height:1}
+.review-stat-cell .lbl{font-size:11px;color:var(--ink3);margin-top:3px}
+.review-stat-cell .val.good{color:var(--green)}
+.review-stat-cell .val.warn{color:var(--amber)}
+
+.review-ta-wrap{padding:14px 16px 0}
+.review-ta-label{font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.review-ta{width:100%;border:1.5px solid #e5e2dd;border-radius:12px;padding:10px 12px;font-size:14px;color:var(--ink);outline:none;resize:none;line-height:1.6;background:var(--surface);min-height:70px;font-family:'DM Sans',sans-serif}
+.review-ta::placeholder{color:var(--ink3)}
+.review-ta:focus{border-color:var(--purple)}
+.review-submit{margin:12px 16px 16px;width:calc(100% - 32px);background:var(--purple);color:#fff;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:500}
+
+/* ── NOTIFICATIONS ── */
+.notif-card{margin:14px 16px 0;background:var(--surface);border-radius:var(--radius);border:1px solid #ece9e4;overflow:hidden}
+.notif-row{padding:13px 16px;display:flex;align-items:center;gap:12px;border-bottom:.5px solid #ece9e4}
+.notif-row:last-child{border-bottom:none}
+.notif-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.notif-body{flex:1}
+.notif-title{font-size:14px;font-weight:500;color:var(--ink)}
+.notif-sub{font-size:12px;color:var(--ink3);margin-top:2px}
+.notif-time{border:1px solid #ddd;border-radius:8px;padding:4px 10px;font-size:12px;color:var(--ink2);background:var(--surface2);font-weight:500}
+.toggle{width:44px;height:26px;background:#ddd;border-radius:999px;position:relative;cursor:pointer;flex-shrink:0;transition:background .2s}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(18px)}
+.notif-note{margin:8px 16px 0;padding:10px 12px;background:#fff8e6;border-radius:10px;font-size:12px;color:var(--amber);display:flex;gap:8px;align-items:flex-start}
+</style>
+</head>
+<body>
+
+<div style="text-align:center;padding:24px 16px 0;font-family:'DM Sans',sans-serif">
+  <p style="font-size:13px;color:#888;margin-bottom:6px">feature mockup — tap screens to explore</p>
+  <div class="tab-bar" style="max-width:390px;margin:0 auto;border-radius:12px 12px 0 0;overflow:hidden">
+    <button class="tab active" onclick="showMock('habits')">🌱 habits</button>
+    <button class="tab" onclick="showMock('review')">📊 weekly review</button>
+    <button class="tab" onclick="showMock('notifs')">🔔 notifications</button>
+  </div>
+</div>
+
+<div class="phone" id="phone">
+  <div class="sync-bar">
+    <div class="sync-dot"></div>
+    <span>synced</span>
+    <button class="who-btn">👤 Ravi</button>
+  </div>
+
+  <!-- HABIT TRACKER -->
+  <div class="screen active" id="mock-habits">
+    <div class="header" style="background:var(--teal)">
+      <h1 style="color:#fff">🌱 habits</h1>
+      <p style="color:rgba(255,255,255,.8)">build streaks, one day at a time</p>
+      <div class="habit-header-stats">
+        <div class="habit-stat"><span>5</span>active</div>
+        <div class="habit-stat"><span>3</span>done today</div>
+        <div class="habit-stat"><span>🔥 12</span>best streak</div>
+      </div>
+    </div>
+
+    <!-- weekly bar chart -->
+    <div class="week-strip">
+      <div class="week-strip-label">this week's completion</div>
+      <div class="week-days">
+        <div class="week-day">
+          <div class="wd-label">M</div>
+          <div class="wd-bar"><div class="wd-fill" style="height:100%"></div></div>
+          <div class="wd-pct">100%</div>
+        </div>
+        <div class="week-day">
+          <div class="wd-label">T</div>
+          <div class="wd-bar"><div class="wd-fill" style="height:80%"></div></div>
+          <div class="wd-pct">80%</div>
+        </div>
+        <div class="week-day">
+          <div class="wd-label">W</div>
+          <div class="wd-bar"><div class="wd-fill" style="height:60%"></div></div>
+          <div class="wd-pct">60%</div>
+        </div>
+        <div class="week-day">
+          <div class="wd-label">T</div>
+          <div class="wd-bar"><div class="wd-fill" style="height:100%"></div></div>
+          <div class="wd-pct">100%</div>
+        </div>
+        <div class="week-day">
+          <div class="wd-label">F</div>
+          <div class="wd-bar"><div class="wd-fill" style="height:40%"></div></div>
+          <div class="wd-pct">40%</div>
+        </div>
+        <div class="week-day">
+          <div class="wd-label">S</div>
+          <div class="wd-bar" style="opacity:.4"><div class="wd-fill" style="height:0%"></div></div>
+          <div class="wd-pct" style="opacity:.4">—</div>
+        </div>
+        <div class="week-day">
+          <div class="wd-label">S</div>
+          <div class="wd-bar today"><div class="wd-fill" style="height:60%"></div></div>
+          <div class="wd-pct">60%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="habits-section">
+      <div class="section-label">today's habits</div>
+
+      <!-- habit 1 -->
+      <div class="habit-row">
+        <div class="habit-top">
+          <div class="habit-emoji" style="background:#e4f4ee">🏃</div>
+          <div class="habit-info">
+            <div class="habit-name">morning run</div>
+            <div class="habit-streak"><i class="ti ti-flame" style="color:var(--amber)"></i> <b>8</b> day streak</div>
+          </div>
+        </div>
+        <div class="habit-checks" id="hc1">
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">M</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">W</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">F</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck" style="opacity:.35"><div class="hcheck-day">S</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck today" onclick="toggleHcheck(this)"><div class="hcheck-day">S</div><div class="hcheck-mark">·</div></div>
+        </div>
+      </div>
+
+      <!-- habit 2 -->
+      <div class="habit-row">
+        <div class="habit-top">
+          <div class="habit-emoji" style="background:#e8f0fb">📚</div>
+          <div class="habit-info">
+            <div class="habit-name">read 20 pages</div>
+            <div class="habit-streak"><i class="ti ti-flame" style="color:var(--amber)"></i> <b>3</b> day streak</div>
+          </div>
+        </div>
+        <div class="habit-checks">
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">M</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">W</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">F</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck" style="opacity:.35"><div class="hcheck-day">S</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck today done" onclick="toggleHcheck(this)"><div class="hcheck-day">S</div><div class="hcheck-mark">✓</div></div>
+        </div>
+      </div>
+
+      <!-- habit 3 -->
+      <div class="habit-row">
+        <div class="habit-top">
+          <div class="habit-emoji" style="background:#fdf0e0">💧</div>
+          <div class="habit-info">
+            <div class="habit-name">drink 8 glasses</div>
+            <div class="habit-streak"><i class="ti ti-flame" style="color:#ddd"></i> <b style="color:var(--ink3)">0</b> day streak</div>
+          </div>
+        </div>
+        <div class="habit-checks">
+          <div class="hcheck" onclick="toggleHcheck(this)"><div class="hcheck-day">M</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck" onclick="toggleHcheck(this)"><div class="hcheck-day">W</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck" onclick="toggleHcheck(this)"><div class="hcheck-day">F</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck" style="opacity:.35"><div class="hcheck-day">S</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck today" onclick="toggleHcheck(this)"><div class="hcheck-day">S</div><div class="hcheck-mark">·</div></div>
+        </div>
+      </div>
+
+      <!-- habit 4 -->
+      <div class="habit-row">
+        <div class="habit-top">
+          <div class="habit-emoji" style="background:#f0eaf9">🧘</div>
+          <div class="habit-info">
+            <div class="habit-name">meditate 10 min</div>
+            <div class="habit-streak"><i class="ti ti-flame" style="color:var(--amber)"></i> <b>12</b> day streak</div>
+          </div>
+        </div>
+        <div class="habit-checks">
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">M</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">W</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">T</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck done" onclick="toggleHcheck(this)"><div class="hcheck-day">F</div><div class="hcheck-mark">✓</div></div>
+          <div class="hcheck" style="opacity:.35"><div class="hcheck-day">S</div><div class="hcheck-mark">·</div></div>
+          <div class="hcheck today done" onclick="toggleHcheck(this)"><div class="hcheck-day">S</div><div class="hcheck-mark">✓</div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="add-habit-btn" style="margin-top:8px">
+      <i class="ti ti-plus" style="font-size:16px"></i> add a habit
+    </button>
+
+    <nav class="nav">
+      <button class="nav-btn"><i class="ti ti-checklist"></i>tasks</button>
+      <button class="nav-btn"><i class="ti ti-notebook"></i>journal</button>
+      <button class="nav-btn active"><i class="ti ti-flame"></i>habits</button>
+      <button class="nav-btn"><i class="ti ti-calendar-stats"></i>planner</button>
+    </nav>
+  </div>
+
+  <!-- WEEKLY REVIEW -->
+  <div class="screen" id="mock-review">
+    <div class="header" style="background:var(--blue)">
+      <h1 style="color:#fff">📊 weekly review</h1>
+      <p style="color:rgba(255,255,255,.8)">week of May 12 – 18</p>
+    </div>
+
+    <div class="review-card">
+      <div class="review-card-hdr">
+        <i class="ti ti-chart-bar" style="color:var(--blue);font-size:18px"></i>
+        <span>this week at a glance</span>
+      </div>
+      <div class="review-stats-grid">
+        <div class="review-stat-cell">
+          <div class="val good">14</div>
+          <div class="lbl">tasks completed</div>
+        </div>
+        <div class="review-stat-cell">
+          <div class="val warn">3</div>
+          <div class="lbl">tasks carried over</div>
+        </div>
+        <div class="review-stat-cell">
+          <div class="val good">6/7</div>
+          <div class="lbl">journal days</div>
+        </div>
+        <div class="review-stat-cell">
+          <div class="val good">78%</div>
+          <div class="lbl">habit completion</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-card" style="margin-top:10px">
+      <div class="review-card-hdr">
+        <i class="ti ti-flame" style="color:var(--amber);font-size:18px"></i>
+        <span>habit highlights</span>
+      </div>
+      <div style="padding:10px 16px 14px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+          <span>🧘 meditate 10 min</span>
+          <span style="font-weight:600;color:var(--green)">7/7</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+          <span>🏃 morning run</span>
+          <span style="font-weight:600;color:var(--green)">6/7</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+          <span>📚 read 20 pages</span>
+          <span style="font-weight:600;color:var(--amber)">4/7</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px">
+          <span>💧 drink 8 glasses</span>
+          <span style="font-weight:600;color:var(--accent)">2/7</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-ta-wrap">
+      <div class="review-ta-label"><i class="ti ti-sun" style="color:var(--amber)"></i> what went well this week?</div>
+      <textarea class="review-ta" placeholder="celebrate your wins…"></textarea>
+    </div>
+    <div class="review-ta-wrap" style="margin-top:10px">
+      <div class="review-ta-label"><i class="ti ti-target" style="color:var(--accent)"></i> what's your focus for next week?</div>
+      <textarea class="review-ta" placeholder="set your intentions…"></textarea>
+    </div>
+    <button class="review-submit">save review →</button>
+
+    <nav class="nav">
+      <button class="nav-btn"><i class="ti ti-checklist"></i>tasks</button>
+      <button class="nav-btn"><i class="ti ti-notebook"></i>journal</button>
+      <button class="nav-btn"><i class="ti ti-flame"></i>habits</button>
+      <button class="nav-btn"><i class="ti ti-calendar-stats"></i>planner</button>
+    </nav>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div class="screen" id="mock-notifs">
+    <div class="header" style="background:var(--ink)">
+      <h1 style="color:#fff">🔔 notifications</h1>
+      <p style="color:rgba(255,255,255,.7)">reminders that work for you</p>
+    </div>
+
+    <div style="padding:14px 16px 0">
+      <div class="section-label">daily reminders</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#fff8e6">☀️</div>
+        <div class="notif-body">
+          <div class="notif-title">morning check-in</div>
+          <div class="notif-sub">review focus tasks + journal prompt</div>
+        </div>
+        <input type="time" value="08:00" class="notif-time" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:12px;outline:none"/>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#f0eaf9">🌙</div>
+        <div class="notif-body">
+          <div class="notif-title">evening wind-down</div>
+          <div class="notif-sub">gratitude journal + tomorrow's tasks</div>
+        </div>
+        <input type="time" value="21:00" class="notif-time" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:12px;outline:none"/>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#e4f4ee">🌱</div>
+        <div class="notif-body">
+          <div class="notif-title">habit reminder</div>
+          <div class="notif-sub">nudge if today's habits aren't done</div>
+        </div>
+        <input type="time" value="20:00" class="notif-time" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:12px;outline:none"/>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <div style="padding:14px 16px 0">
+      <div class="section-label">task alerts</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#fff0ed">📅</div>
+        <div class="notif-body">
+          <div class="notif-title">due today</div>
+          <div class="notif-sub">notify when tasks are due today</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#fde8e8">⚠️</div>
+        <div class="notif-body">
+          <div class="notif-title">overdue tasks</div>
+          <div class="notif-sub">daily reminder of overdue items</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="notif-row">
+        <div class="notif-icon" style="background:#e8f0fb">📊</div>
+        <div class="notif-body">
+          <div class="notif-title">weekly review</div>
+          <div class="notif-sub">sunday evening summary prompt</div>
+        </div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+
+    <div class="notif-note" style="margin-bottom:0">
+      <span>💡</span>
+      <span>notifications require the app to be installed and granted permission. tap a toggle to enable.</span>
+    </div>
+
+    <nav class="nav">
+      <button class="nav-btn"><i class="ti ti-checklist"></i>tasks</button>
+      <button class="nav-btn"><i class="ti ti-notebook"></i>journal</button>
+      <button class="nav-btn"><i class="ti ti-flame"></i>habits</button>
+      <button class="nav-btn"><i class="ti ti-calendar-stats"></i>planner</button>
+    </nav>
+  </div>
+</div>
+
+<script>
+function showMock(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('mock-'+id).classList.add('active');
+  event.target.classList.add('active');
+  document.getElementById('phone').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function toggleHcheck(el){
+  el.classList.toggle('done');
+  el.querySelector('.hcheck-mark').textContent = el.classList.contains('done') ? '✓' : '·';
+}
+</script>
+</body>
+</html>
