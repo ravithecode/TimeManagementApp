@@ -394,6 +394,13 @@ select.opt-chip{appearance:none;cursor:pointer}
 .challenge-card-habits{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
 .challenge-habit-tag{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--ink2)}
 .challenge-active-card{background:var(--surface);border:1.5px solid #2b5ea7;border-radius:var(--radius);padding:14px 15px;margin-bottom:10px}
+/* schedule edit controls */
+.sched-note{margin:0 0 14px;background:#f0eaf9;border:1px solid #d4c0f0;border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--ink2);line-height:1.5}
+.sched-controls{display:flex;flex-direction:column;gap:3px;margin-left:auto;flex-shrink:0}
+.sched-move-btn{background:none;border:1px solid #e5e2dd;border-radius:6px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:11px;line-height:1;padding:0}
+.sched-move-btn:hover{background:var(--surface2);color:var(--ink)}
+.sched-del-btn{background:none;border:1px solid #fcc;border-radius:6px;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#e74c3c;font-size:11px;padding:0}
+.sched-del-btn:hover{background:#fff0ed}
 </style>
 </head>
 <body>
@@ -920,7 +927,7 @@ let nuEmoji = '🙂';
 let searchQuery = '';
 let focusPicks = new Set();
 let editingTodo = null;
-let lastGeneratedBlocks = [];
+let lastGeneratedBlocks = [], lastWake = '07:00';
 let addHabitEmoji = '🏃', addHabitColor = '#e4f4ee';
 let selectedDuration = null, editDuration = null;
 const HABIT_EMOJIS = ['🏃','🧘','📚','💧','🥗','😴','💪','🎯','✍️','🧹','🚶','🎵','🌿','☀️','🧴'];
@@ -1666,36 +1673,36 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
   const fixed=[];
 
   // Morning routine + breakfast
-  fixed.push({s:wake,e:wake+20,title:'morning routine',desc:'wake up & get ready',type:'break'});
-  fixed.push({s:wake+20,e:wake+50,title:'breakfast',desc:'',type:'break'});
+  fixed.push({s:wake,e:wake+20,dur:20,title:'morning routine',desc:'wake up & get ready',type:'break'});
+  fixed.push({s:wake+20,e:wake+50,dur:30,title:'breakfast',desc:'',type:'break'});
 
   // Habits block in morning (after breakfast)
   if(habitList&&habitList.length){
     const habitDur=habitList.length*20;
-    fixed.push({s:wake+50,e:wake+50+habitDur,title:`habits (${habitList.length})`,desc:habitList.map(h=>h.name).join(' · '),type:'habit'});
+    fixed.push({s:wake+50,e:wake+50+habitDur,dur:habitDur,title:`habits (${habitList.length})`,desc:habitList.map(h=>h.name).join(' · '),type:'habit'});
   }
 
   // Meetings at their exact times (assume 1 hour each)
   meetingList.slice().sort((a,b)=>toMins(a.time)-toMins(b.time)).forEach(m=>{
     if(!m.time) return;
     const s=toMins(m.time);
-    if(s>=wake&&s<sleep) fixed.push({s,e:Math.min(s+60,sleep),title:m.title,desc:'',type:'meeting'});
+    if(s>=wake&&s<sleep) fixed.push({s,e:Math.min(s+60,sleep),dur:60,fixedMins:s,title:m.title,desc:'',type:'meeting'});
   });
 
   // Lunch: target 11:30am, minimum 3h after wake
   const lunchTarget=Math.max(11*60+30,wake+180);
   const lunchAt=findFreeSlot(fixed,lunchTarget,45,sleep-90);
-  if(lunchAt!==null) fixed.push({s:lunchAt,e:lunchAt+45,title:'lunch break',desc:'step away from the screen',type:'break'});
+  if(lunchAt!==null) fixed.push({s:lunchAt,e:lunchAt+45,dur:45,title:'lunch break',desc:'step away from the screen',type:'break'});
 
   // Dinner: 6:30pm, skip if too close to lunch or sleep
   const dinnerTarget=18*60+30;
   if(dinnerTarget>(lunchAt||0)+90&&dinnerTarget+45<sleep-30){
     const dinnerAt=findFreeSlot(fixed,dinnerTarget,45,sleep-30);
-    if(dinnerAt!==null) fixed.push({s:dinnerAt,e:dinnerAt+45,title:'dinner',desc:'',type:'break'});
+    if(dinnerAt!==null) fixed.push({s:dinnerAt,e:dinnerAt+45,dur:45,title:'dinner',desc:'',type:'break'});
   }
 
   // Wind down
-  if(sleep>wake+60) fixed.push({s:sleep-30,e:sleep,title:'wind down',desc:'reflect & prepare for tomorrow',type:'break'});
+  if(sleep>wake+60) fixed.push({s:sleep-30,e:sleep,dur:30,title:'wind down',desc:'reflect & prepare for tomorrow',type:'break'});
 
   fixed.sort((a,b)=>a.s-b.s);
 
@@ -1711,10 +1718,10 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
         const dur=task.duration_min||( avail>=90?90:avail>=60?60:avail>=45?45:0);
         if(!dur||avail<Math.min(dur,15)) break;
         const actual=Math.min(dur,avail-5);
-        out.push({time:fmtT(pos),title:task.text,desc:`${actual} min focus block`,type:'task'});
+        out.push({time:fmtT(pos),title:task.text,desc:`${actual} min focus block`,type:'task',dur:actual});
         pos+=actual; taskIdx++;
         if(pos<blk.s-15&&taskIdx<tasks.length){
-          out.push({time:fmtT(pos),title:'short break',desc:'5 min rest',type:'break'});
+          out.push({time:fmtT(pos),title:'short break',desc:'5 min rest',type:'break',dur:5});
           pos+=5;
         }
       }
@@ -1725,12 +1732,13 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
   // Any tasks that didn't fit — add as an "unscheduled" note
   if(taskIdx<tasks.length){
     const rem=tasks.slice(taskIdx);
-    out.push({time:'',title:`${rem.length} unscheduled task${rem.length>1?'s':''}`,desc:rem.map(t=>t.text).join(', '),type:'break'});
+    out.push({time:'',title:`${rem.length} unscheduled task${rem.length>1?'s':''}`,desc:rem.map(t=>t.text).join(', '),type:'break',dur:0});
   }
   return out;
 }
 function generatePlan(){
   const wake=document.getElementById('wake-time').value||'07:00';
+  lastWake=wake;
   const sleep=document.getElementById('sleep-time').value||'22:00';
   const td=todayStr();
   const priorityTasks=todos.filter(t=>!t.done&&(t.is_focus||isToday(t.due)));
@@ -1749,19 +1757,56 @@ function generatePlan(){
 }
 function renderSchedule(blocks){
   const out=document.getElementById('schedule-out');
-  out.innerHTML=blocks.map((b,i)=>`
-    <div class="sched-block">
+  const moveable=b=>b.type==='task'||b.type==='habit';
+  out.innerHTML=`<div class="sched-note">based on how your day looks with your meetings and routine, we suggest this to be your ideal day ✨</div>`+
+  blocks.map((b,i)=>{
+    const canMove=moveable(b);
+    const dot=b.type==='meeting'?'#1a3a5c':b.type==='task'?'var(--accent)':'var(--green)';
+    const card=b.type==='meeting'?'m-blk':b.type==='task'?'t-blk':'b-blk';
+    const controls=canMove?`<div class="sched-controls">
+      <button class="sched-move-btn" onclick="movePlanBlock(${i},-1)" title="move up">▲</button>
+      <button class="sched-move-btn" onclick="movePlanBlock(${i},1)" title="move down">▼</button>
+      <button class="sched-del-btn" onclick="removePlanBlock(${i})" title="remove">✕</button>
+    </div>`:'';
+    return`<div class="sched-block">
       <div class="stime">${escHtml(b.time||'')}</div>
-      <div class="sline"><div class="sdot" style="background:${b.type==='meeting'?'#1a3a5c':b.type==='break'?'var(--green)':'var(--accent)'}"></div>${i<blocks.length-1?'<div class="sbar"></div>':''}</div>
-      <div class="scard ${b.type==='meeting'?'m-blk':b.type==='habit'?'b-blk':b.type==='break'?'b-blk':'t-blk'}">
-        <div class="stitle">${escHtml(b.title||'')}</div>
-        ${b.desc?`<div class="sdesc">${escHtml(b.desc)}</div>`:''}
+      <div class="sline"><div class="sdot" style="background:${dot}"></div>${i<blocks.length-1?'<div class="sbar"></div>':''}</div>
+      <div class="scard ${card}" style="display:flex;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          <div class="stitle">${escHtml(b.title||'')}</div>
+          ${b.desc?`<div class="sdesc">${escHtml(b.desc)}</div>`:''}
+        </div>
+        ${controls}
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   const taskCount=blocks.filter(b=>b.type==='task').length;
   if(taskCount>0){
     out.innerHTML+=`<button class="save-tasks-btn" onclick="saveScheduleAsTasks()"><i class="ti ti-playlist-add"></i> add ${taskCount} task${taskCount>1?'s':''} to my list</button>`;
   }
+}
+function recalcBlockTimes(){
+  const toMins=t=>{const[h,m]=t.split(':').map(Number);return h*60+m;};
+  const fmtT=mins=>{const h=Math.floor(mins/60)%24,m=mins%60;return`${h%12||12}:${String(m).padStart(2,'0')}${h>=12?'pm':'am'}`;};
+  let cursor=toMins(lastWake||'07:00');
+  lastGeneratedBlocks.forEach(blk=>{
+    if(blk.fixedMins!==undefined) cursor=blk.fixedMins;
+    if(blk.time!=='') blk.time=fmtT(cursor);
+    cursor+=(blk.dur||30);
+  });
+}
+function movePlanBlock(idx, dir){
+  const blocks=lastGeneratedBlocks;
+  const target=idx+dir;
+  if(target<0||target>=blocks.length) return;
+  [blocks[idx],blocks[target]]=[blocks[target],blocks[idx]];
+  recalcBlockTimes();
+  renderSchedule(blocks);
+}
+function removePlanBlock(idx){
+  lastGeneratedBlocks.splice(idx,1);
+  recalcBlockTimes();
+  renderSchedule(lastGeneratedBlocks);
 }
 async function saveScheduleAsTasks(){
   const taskBlocks=lastGeneratedBlocks.filter(b=>b.type==='task');
