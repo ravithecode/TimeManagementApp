@@ -2196,8 +2196,9 @@ async function saveAddHabit(){
   if(!name){document.getElementById('ah-err').textContent='please enter a name';return;}
   const freq=document.getElementById('ah-freq').value;
   const r=await sb('habits','POST',{user_id:currentUser.id,name,emoji:addHabitEmoji,bg_color:addHabitColor,frequency:freq});
-  if(!r||r.error){document.getElementById('ah-err').textContent='error saving, try again';return;}
-  habits.push(Array.isArray(r)?r[0]:r);
+  const hab=Array.isArray(r)?r[0]:r;
+  if(!hab||!hab.id){document.getElementById('ah-err').textContent='error saving, try again';return;}
+  habits.push(hab);
   closeAddHabit();
   renderHabitsScreen(); renderTodayScreen();
 }
@@ -2277,7 +2278,8 @@ async function startChallenge(id){
   const created=[];
   for(const h of c.habits){
     const r=await sb('habits','POST',{user_id:currentUser.id,name:h.name,emoji:h.emoji,bg_color:h.bg,frequency:'daily'});
-    if(r&&!r.error){ const hab=Array.isArray(r)?r[0]:r; habits.push(hab); created.push(hab.id); }
+    const hab=Array.isArray(r)?r[0]:r;
+    if(hab&&hab.id){ habits.push(hab); created.push(hab.id); }
   }
   localStorage.setItem('active_challenge',JSON.stringify({id:c.id,icon:c.icon,name:c.name,startDate:new Date().toISOString().slice(0,10),habitIds:created}));
   closeChallengeModal();
