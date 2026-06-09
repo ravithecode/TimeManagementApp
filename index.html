@@ -868,21 +868,21 @@ select.opt-chip{appearance:none;cursor:pointer}
     <div class="notif-row">
       <div>
         <div style="font-weight:600;font-size:14px">🌅 morning check-in</div>
-        <div style="font-size:12px;color:var(--ink3)">7am daily intentions</div>
+        <div style="font-size:12px;color:var(--ink3)" id="notif-morning-lbl">daily intentions</div>
       </div>
       <label class="toggle-sw"><input type="checkbox" id="notif-morning" onchange="saveNotifPrefs()"><span></span></label>
     </div>
     <div class="notif-row">
       <div>
         <div style="font-weight:600;font-size:14px">🌿 midday habits</div>
-        <div style="font-size:12px;color:var(--ink3)">12pm habit reminder</div>
+        <div style="font-size:12px;color:var(--ink3)" id="notif-habits-lbl">habit reminder</div>
       </div>
       <label class="toggle-sw"><input type="checkbox" id="notif-habits" onchange="saveNotifPrefs()"><span></span></label>
     </div>
     <div class="notif-row">
       <div>
         <div style="font-weight:600;font-size:14px">🌙 evening wind-down</div>
-        <div style="font-size:12px;color:var(--ink3)">9pm reflection nudge</div>
+        <div style="font-size:12px;color:var(--ink3)" id="notif-evening-lbl">reflection nudge</div>
       </div>
       <label class="toggle-sw"><input type="checkbox" id="notif-evening" onchange="saveNotifPrefs()"><span></span></label>
     </div>
@@ -894,6 +894,7 @@ select.opt-chip{appearance:none;cursor:pointer}
       <label class="toggle-sw"><input type="checkbox" id="notif-overdue" onchange="saveNotifPrefs()"><span></span></label>
     </div>
     <div id="notif-status" style="font-size:12px;color:var(--ink3);text-align:center;margin-top:8px"></div>
+    <button id="notif-test-btn" onclick="sendTestNotif()" style="display:none;width:100%;margin-top:8px;background:var(--surface2);border:1px solid #ddd;border-radius:10px;padding:9px;font-size:13px;color:var(--ink2);cursor:pointer">send test notification</button>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeNotifModal()">done</button>
     </div>
@@ -2431,15 +2432,44 @@ function openNotifModal() {
     document.getElementById('notif-perm-msg').textContent = 'push notifications are not supported in this browser';
     document.getElementById('notif-perm-msg').style.display = 'block';
   }
+  // Show scheduled times in the user's local timezone
+  const utcToLocal=h=>{const d=new Date();d.setUTCHours(h,0,0,0);return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});};
+  document.getElementById('notif-morning-lbl').textContent=`daily intentions · ${utcToLocal(12)}`;
+  document.getElementById('notif-habits-lbl').textContent=`habit reminder · ${utcToLocal(17)}`;
+  document.getElementById('notif-evening-lbl').textContent=`reflection nudge · ${utcToLocal(2)}`;
+
   const prefs = JSON.parse(localStorage.getItem('notif_prefs') || '{}');
   ['morning','habits','evening','overdue'].forEach(k => {
     document.getElementById('notif-'+k).checked = !!prefs[k];
   });
+  const anyOn = Object.values(prefs).some(Boolean);
+  document.getElementById('notif-test-btn').style.display = anyOn ? 'block' : 'none';
   document.getElementById('notif-status').textContent = '';
   document.getElementById('notif-overlay').classList.add('open');
 }
 function closeNotifModal() {
   document.getElementById('notif-overlay').classList.remove('open');
+}
+async function sendTestNotif() {
+  const btn = document.getElementById('notif-test-btn');
+  const statusEl = document.getElementById('notif-status');
+  btn.textContent = 'sending…'; btn.disabled = true;
+  try {
+    if (Notification.permission !== 'granted') {
+      statusEl.textContent = 'permission not granted — enable in browser settings';
+      return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification('test from mytasks 👋', {
+      body: 'push notifications are working correctly',
+      icon: '/icon.svg', badge: '/icon.svg', tag: 'test'
+    });
+    statusEl.textContent = '✓ test sent — check your notifications';
+  } catch(err) {
+    statusEl.textContent = `error: ${err.message}`;
+  } finally {
+    btn.textContent = 'send test notification'; btn.disabled = false;
+  }
 }
 
 async function saveNotifPrefs() {
@@ -2484,18 +2514,31 @@ async function saveNotifPrefs() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
-    await fetch('/.netlify/functions/subscribe', {
+    const res = await fetch('/.netlify/functions/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: currentUser.id, subscription: sub.toJSON(), prefs })
     });
+    if (!res.ok) {
+      const body = await res.json().catch(()=>({}));
+      statusEl.textContent = `save failed: ${body.error||res.status}`;
+      return;
+    }
     localStorage.setItem('notif_prefs', JSON.stringify({
       morning: prefs.notif_morning, habits: prefs.notif_habits,
       evening: prefs.notif_evening, overdue: prefs.notif_overdue
     }));
+    document.getElementById('notif-test-btn').style.display = 'block';
+    statusEl.textContent = '✓ saved — sending test…';
+    await reg.showNotification('notifications enabled ✓', {
+      body: 'mytasks will send you reminders at your scheduled times',
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      tag: 'test'
+    });
     statusEl.textContent = '✓ saved';
   } catch (err) {
-    statusEl.textContent = 'could not save (works on Netlify only)';
+    statusEl.textContent = `error: ${err.message}`;
   }
 }
 
