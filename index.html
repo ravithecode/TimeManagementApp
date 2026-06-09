@@ -1737,15 +1737,23 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
     if(s>=wake&&s<sleep) fixed.push({s,e:Math.min(s+60,sleep),dur:60,fixedMins:s,title:m.title,desc:'',type:'meeting'});
   });
 
-  // Lunch: target 11:30am, minimum 3h after wake
-  const lunchTarget=Math.max(11*60+30,wake+180);
+  // Lunch: target 12pm, minimum 4h after wake (later risers shift accordingly)
+  const lunchTarget=Math.max(12*60,wake+240);
   const lunchAt=findFreeSlot(fixed,lunchTarget,45,sleep-90);
   if(lunchAt!==null) fixed.push({s:lunchAt,e:lunchAt+45,dur:45,title:'lunch break',desc:'step away from the screen',type:'break'});
 
-  // Dinner: 6:30pm, skip if too close to lunch or sleep
-  const dinnerTarget=18*60+30;
-  if(dinnerTarget>(lunchAt||0)+90&&dinnerTarget+45<sleep-30){
-    const dinnerAt=findFreeSlot(fixed,dinnerTarget,45,sleep-30);
+  // Morning snack: add if gap between breakfast end and lunch is >3.5h (e.g. 5am wake)
+  const breakfastEnd=wake+50;
+  const snackTarget=wake+300; // 5h after wake
+  if(lunchAt!==null&&(lunchAt-breakfastEnd)>210&&(snackTarget+105)<=lunchAt){
+    const snackAt=findFreeSlot(fixed,snackTarget,15,lunchAt-90);
+    if(snackAt!==null) fixed.push({s:snackAt,e:snackAt+15,dur:15,title:'morning snack',desc:'fruit or light snack',type:'break'});
+  }
+
+  // Dinner: target 5:30pm, within 4:30–6pm window, at least 2h after lunch
+  const dinnerTarget=17*60+30;
+  if(dinnerTarget>(lunchAt||0)+120&&dinnerTarget+45<=18*60&&dinnerTarget+45<sleep-30){
+    const dinnerAt=findFreeSlot(fixed,dinnerTarget,45,18*60);
     if(dinnerAt!==null) fixed.push({s:dinnerAt,e:dinnerAt+45,dur:45,title:'dinner',desc:'',type:'break'});
   }
 
@@ -1809,7 +1817,7 @@ function generatePlan(){
 }
 function renderSchedule(blocks){
   const out=document.getElementById('schedule-out');
-  const moveable=b=>b.type==='task'||b.type==='habit';
+  const moveable=b=>true;
   out.innerHTML=`<div class="sched-note">based on how your day looks with your meetings and routine, we suggest this to be your ideal day ✨</div>`+
   blocks.map((b,i)=>{
     const canMove=moveable(b);
