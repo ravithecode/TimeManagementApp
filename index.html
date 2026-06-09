@@ -351,7 +351,8 @@ select.opt-chip{appearance:none;cursor:pointer}
 .habit-row-meta{font-size:11px;color:var(--ink3);margin-top:2px;display:flex;align-items:center;gap:8px}
 .habit-streak-badge{border-radius:6px;padding:1px 8px;font-size:10px;font-weight:700}
 .habit-day-checks{display:flex;gap:4px}
-.hcheck{flex:1;height:34px;border-radius:9px;border:1.5px solid #e5e2dd;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;transition:all .15s;background:var(--surface)}
+.hcheck{flex:1;height:34px;border-radius:9px;border:1.5px solid #e5e2dd;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:pointer;transition:all .2s;background:var(--surface)}
+.hcheck:active{transform:scale(.88);opacity:.7}
 .hcheck.done{background:#1a7a7a;border-color:#1a7a7a;color:#fff}
 .hcheck.is-today{border-color:#1a7a7a}
 .hcheck.is-today:not(.done){color:#1a7a7a}
@@ -367,6 +368,16 @@ select.opt-chip{appearance:none;cursor:pointer}
 .habit-color-row{display:flex;gap:8px;margin-bottom:12px}
 .hcr-swatch{width:32px;height:32px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:all .15s}
 .hcr-swatch.sel{outline:3px solid var(--ink);outline-offset:2px}
+/* toast */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 16px;border-radius:20px;font-size:13px;display:flex;align-items:center;gap:10px;z-index:999;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1;pointer-events:auto}
+.toast-undo{background:none;border:none;color:#7eb8f7;font-size:13px;cursor:pointer;font-weight:600;padding:0}
+/* unscheduled tasks */
+.unsched-section{margin:12px 0 0;background:var(--surface2);border-radius:var(--radius);padding:10px 14px}
+.unsched-title{font-size:12px;font-weight:600;color:var(--ink3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
+.unsched-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:.5px solid #e5e2dd;font-size:13px;color:var(--ink2)}
+.unsched-row:last-child{border-bottom:none}
+.unsched-add{background:none;border:1px solid var(--accent);border-radius:8px;color:var(--accent);font-size:11px;padding:3px 8px;cursor:pointer}
 /* duration chips */
 .dur-chips{display:flex;gap:6px;padding:0 16px 8px;align-items:center;flex-wrap:wrap}
 .dur-chip{font-size:12px;padding:4px 10px;border-radius:20px;border:1.5px solid #e5e2dd;background:var(--surface);color:var(--ink2);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
@@ -567,11 +578,11 @@ select.opt-chip{appearance:none;cursor:pointer}
     </div>
     <div class="dur-chips">
       <span style="font-size:11px;color:var(--ink3)">⏱</span>
-      <button class="dur-chip" onclick="pickDuration(15,this)">15m</button>
-      <button class="dur-chip" onclick="pickDuration(30,this)">30m</button>
-      <button class="dur-chip" onclick="pickDuration(45,this)">45m</button>
-      <button class="dur-chip" onclick="pickDuration(60,this)">1h</button>
-      <button class="dur-chip" onclick="pickDuration(120,this)">2h</button>
+      <button class="dur-chip" data-dur="15" onclick="pickDuration(15,this)">15m</button>
+      <button class="dur-chip" data-dur="30" onclick="pickDuration(30,this)">30m</button>
+      <button class="dur-chip" data-dur="45" onclick="pickDuration(45,this)">45m</button>
+      <button class="dur-chip" data-dur="60" onclick="pickDuration(60,this)">1h</button>
+      <button class="dur-chip" data-dur="120" onclick="pickDuration(120,this)">2h</button>
     </div>
     <div class="search-bar">
       <i class="ti ti-search"></i>
@@ -728,9 +739,12 @@ select.opt-chip{appearance:none;cursor:pointer}
     <div style="padding:12px 16px 0">
       <div class="section-label">what's going into the plan</div>
       <div id="plan-context" style="background:var(--surface);border:1px solid #ece9e4;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
-      <button class="gen-btn" id="gen-btn" onclick="generatePlan()">
-        <i class="ti ti-calendar-event"></i> build my day plan
-      </button>
+      <div style="display:flex;gap:8px">
+        <button class="gen-btn" id="gen-btn" onclick="generatePlan()" style="flex:1">
+          <i class="ti ti-calendar-event"></i> build my day plan
+        </button>
+        <button class="gen-btn" id="regen-btn" onclick="generatePlan()" title="regenerate" style="flex:none;width:46px;display:none">↺</button>
+      </div>
     </div>
     <div id="schedule-out" style="padding:14px 16px 0"></div>
   </div>
@@ -828,6 +842,9 @@ select.opt-chip{appearance:none;cursor:pointer}
   </div>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"><span id="toast-msg"></span><button class="toast-undo" id="toast-undo-btn" style="display:none" onclick="toastUndo()">undo</button></div>
+
 <!-- 30-day challenge modal -->
 <div class="overlay" id="challenge-overlay" onclick="if(event.target===this)closeChallengeModal()">
   <div class="modal" style="max-height:85vh;overflow-y:auto">
@@ -892,11 +909,11 @@ select.opt-chip{appearance:none;cursor:pointer}
     </div>
     <div class="dur-chips" style="padding:4px 0 8px">
       <span style="font-size:11px;color:var(--ink3)">⏱</span>
-      <button class="dur-chip" onclick="pickEditDuration(15,this)">15m</button>
-      <button class="dur-chip" onclick="pickEditDuration(30,this)">30m</button>
-      <button class="dur-chip" onclick="pickEditDuration(45,this)">45m</button>
-      <button class="dur-chip" onclick="pickEditDuration(60,this)">1h</button>
-      <button class="dur-chip" onclick="pickEditDuration(120,this)">2h</button>
+      <button class="dur-chip" data-dur="15" onclick="pickEditDuration(15,this)">15m</button>
+      <button class="dur-chip" data-dur="30" onclick="pickEditDuration(30,this)">30m</button>
+      <button class="dur-chip" data-dur="45" onclick="pickEditDuration(45,this)">45m</button>
+      <button class="dur-chip" data-dur="60" onclick="pickEditDuration(60,this)">1h</button>
+      <button class="dur-chip" data-dur="120" onclick="pickEditDuration(120,this)">2h</button>
     </div>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeEditModal()">cancel</button>
@@ -998,6 +1015,25 @@ async function loadDailyFact(){
     document.getElementById('fact-text').textContent=`${pick.year} — ${pick.text}`;
     document.getElementById('fact-card').style.display='flex';
   }catch(e){}
+}
+
+// ── TOAST ──────────────────────────────────────
+let toastTimer=null, toastUndoFn=null;
+function showToast(msg, undoFn=null){
+  clearTimeout(toastTimer);
+  document.getElementById('toast-msg').textContent=msg;
+  const undoBtn=document.getElementById('toast-undo-btn');
+  undoBtn.style.display=undoFn?'block':'none';
+  toastUndoFn=undoFn;
+  const t=document.getElementById('toast');
+  t.classList.add('show');
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3500);
+}
+function toastUndo(){
+  clearTimeout(toastTimer);
+  document.getElementById('toast').classList.remove('show');
+  if(toastUndoFn) toastUndoFn();
+  toastUndoFn=null;
 }
 
 // ── MOTIVATION CARD ────────────────────────────
@@ -1201,7 +1237,10 @@ async function loadAll(){
     habitLogs = Array.isArray(l)?l:[];
     setSyncStatus('ok','synced');
     render(); renderMeetings(); renderTodayScreen();
-  }catch(e){setSyncStatus('err','sync error')}
+  }catch(e){
+    setSyncStatus('err','sync error — retrying…');
+    setTimeout(()=>loadAll(),5000);
+  }
 }
 
 // ── TASKS ──────────────────────────────────────
@@ -1327,8 +1366,7 @@ function openEditModal(t){
   document.getElementById('edit-cat').value=t.cat||'';
   document.getElementById('edit-due').value=t.due||'';
   document.querySelectorAll('#editoverlay .dur-chip').forEach(b=>{
-    b.classList.toggle('sel', parseInt(b.textContent)===editDuration||
-      (b.textContent==='1h'&&editDuration===60)||(b.textContent==='2h'&&editDuration===120));
+    b.classList.toggle('sel', parseInt(b.dataset.dur)===editDuration);
   });
   document.getElementById('editoverlay').classList.add('open');
   setTimeout(()=>document.getElementById('edit-text').focus(),50);
@@ -1420,8 +1458,14 @@ function renderMeetings(){
     </div>`).join('');
 }
 async function deleteMeeting(id){
+  const m=meetings.find(x=>x.id===id); if(!m) return;
+  meetings=meetings.filter(x=>x.id!==id); renderMeetings();
   await sb('meetings','DELETE',null,{id});
-  meetings=meetings.filter(m=>m.id!==id); renderMeetings();
+  showToast('meeting deleted', async()=>{
+    const r=await sb('meetings','POST',{user_id:currentUser.id,time:m.time,title:m.title});
+    const restored=Array.isArray(r)?r[0]:r;
+    if(restored&&restored.id){ meetings.push(restored); meetings.sort((a,b)=>a.time<b.time?-1:1); renderMeetings(); }
+  });
 }
 
 // ── JOURNAL ────────────────────────────────────
@@ -1729,10 +1773,10 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
     out.push({time:fmtT(blk.s),title:blk.title,desc:blk.desc,type:blk.type});
     cursor=blk.e;
   }
-  // Any tasks that didn't fit — add as an "unscheduled" note
+  // Any tasks that didn't fit — add individually as unscheduled
   if(taskIdx<tasks.length){
     const rem=tasks.slice(taskIdx);
-    out.push({time:'',title:`${rem.length} unscheduled task${rem.length>1?'s':''}`,desc:rem.map(t=>t.text).join(', '),type:'break',dur:0});
+    rem.forEach(t=>out.push({time:'',title:t.text,desc:'unscheduled',type:'task',dur:t.duration_min||30,id:t.id}));
   }
   return out;
 }
@@ -1744,15 +1788,19 @@ function generatePlan(){
   const priorityTasks=todos.filter(t=>!t.done&&(t.is_focus||isToday(t.due)));
   const otherTasks=todos.filter(t=>!t.done&&!t.is_focus&&!isToday(t.due));
   const todayHabits=habits.filter(hb=>!isHabitDone(hb.id,td));
-  const btn=document.getElementById('gen-btn');
-  btn.textContent='building…'; btn.disabled=true;
+  const isRegen=document.getElementById('regen-btn').style.display!=='none';
+  const activeBtn=isRegen?document.getElementById('regen-btn'):document.getElementById('gen-btn');
+  const origHTML=activeBtn.innerHTML;
+  activeBtn.textContent='…'; activeBtn.disabled=true;
   try{
     lastGeneratedBlocks=runScheduler(wake,sleep,meetings,priorityTasks,otherTasks,todayHabits);
     renderSchedule(lastGeneratedBlocks);
+    document.getElementById('regen-btn').style.display='flex';
+    document.getElementById('gen-btn').style.display='none';
     setTimeout(()=>document.getElementById('schedule-out').scrollIntoView({behavior:'smooth',block:'start'}),100);
   }finally{
-    btn.innerHTML='<i class="ti ti-calendar-event"></i> build my day plan';
-    btn.disabled=false;
+    activeBtn.innerHTML=origHTML;
+    activeBtn.disabled=false;
   }
 }
 function renderSchedule(blocks){
@@ -2134,8 +2182,8 @@ function renderHabitsScreen(){
       const isTd=date===td;
       const d=new Date(date+'T12:00:00');
       const lbl=['S','M','T','W','T','F','S'][d.getDay()];
-      const clickable=isTd?`onclick="toggleHabitLog('${hb.id}')"`:isTd?'':`onclick="toggleHabitLogDate('${hb.id}','${date}')"`;
-      return`<div class="hcheck${done?' done':''}${isTd?' is-today':''}" ${clickable}>
+      const clickable=isTd?`onclick="toggleHabitLog('${hb.id}')"` :`onclick="toggleHabitLogDate('${hb.id}','${date}')"`;
+      return`<div class="hcheck${done?' done':''}${isTd?' is-today':''}" ${clickable} style="cursor:pointer">
         <div class="hd">${lbl}</div><div class="hm">${done?'✓':'·'}</div>
       </div>`;
     }).join('');
@@ -2155,16 +2203,34 @@ function renderHabitsScreen(){
 }
 
 async function toggleHabitLogDate(hid, date){
-  if(date!==todayStr()) return;
-  await toggleHabitLog(hid);
+  const existing=getHabitLog(hid,date);
+  if(existing){
+    await sb('habit_logs','DELETE',null,{id:existing.id});
+    habitLogs=habitLogs.filter(l=>l.id!==existing.id);
+  } else {
+    const r=await sb('habit_logs','POST',{user_id:currentUser.id,habit_id:hid,log_date:date,done:true});
+    const log=Array.isArray(r)?r[0]:r;
+    if(log&&log.id) habitLogs.push(log);
+  }
+  renderTodayScreen(); renderHabitsScreen();
 }
 
 async function deleteHabit(id){
-  if(!confirm('delete this habit and all its logs?')) return;
-  await sb('habits','DELETE',null,{id});
-  habits=habits.filter(h=>h.id!==id);
+  const h=habits.find(x=>x.id===id); if(!h) return;
+  const removedLogs=habitLogs.filter(l=>l.habit_id===id);
+  habits=habits.filter(x=>x.id!==id);
   habitLogs=habitLogs.filter(l=>l.habit_id!==id);
   renderHabitsScreen(); renderTodayScreen();
+  showToast('habit deleted', async()=>{
+    const r=await sb('habits','POST',{user_id:currentUser.id,name:h.name,emoji:h.emoji,bg_color:h.bg_color,frequency:h.frequency});
+    const restored=Array.isArray(r)?r[0]:r;
+    if(restored&&restored.id){
+      habits.push(restored);
+      renderHabitsScreen(); renderTodayScreen();
+    }
+  });
+  await sb('habits','DELETE',null,{id});
+  await Promise.all(removedLogs.map(l=>sb('habit_logs','DELETE',null,{id:l.id})));
 }
 
 function openAddHabit(){
@@ -2196,8 +2262,9 @@ async function saveAddHabit(){
   if(!name){document.getElementById('ah-err').textContent='please enter a name';return;}
   const freq=document.getElementById('ah-freq').value;
   const r=await sb('habits','POST',{user_id:currentUser.id,name,emoji:addHabitEmoji,bg_color:addHabitColor,frequency:freq});
-  if(!r||r.error){document.getElementById('ah-err').textContent='error saving, try again';return;}
-  habits.push(Array.isArray(r)?r[0]:r);
+  const hab=Array.isArray(r)?r[0]:r;
+  if(!hab||!hab.id){document.getElementById('ah-err').textContent='error saving, try again';return;}
+  habits.push(hab);
   closeAddHabit();
   renderHabitsScreen(); renderTodayScreen();
 }
@@ -2277,7 +2344,8 @@ async function startChallenge(id){
   const created=[];
   for(const h of c.habits){
     const r=await sb('habits','POST',{user_id:currentUser.id,name:h.name,emoji:h.emoji,bg_color:h.bg,frequency:'daily'});
-    if(r&&!r.error){ const hab=Array.isArray(r)?r[0]:r; habits.push(hab); created.push(hab.id); }
+    const hab=Array.isArray(r)?r[0]:r;
+    if(hab&&hab.id){ habits.push(hab); created.push(hab.id); }
   }
   localStorage.setItem('active_challenge',JSON.stringify({id:c.id,icon:c.icon,name:c.name,startDate:new Date().toISOString().slice(0,10),habitIds:created}));
   closeChallengeModal();
@@ -2285,9 +2353,27 @@ async function startChallenge(id){
   setSyncStatus('ok',`${c.name} challenge started!`);
 }
 
-function abandonChallenge(){
+async function abandonChallenge(){
+  const ch=getChallenge();
   localStorage.removeItem('active_challenge');
-  renderChallengeBanner(); renderChallengeHabitSection();
+  renderChallengeBanner(); renderChallengeHabitSection(); renderHabitsScreen(); renderTodayScreen();
+  if(ch&&ch.habitIds&&ch.habitIds.length){
+    let deleteTimer=setTimeout(async()=>{
+      const ids=ch.habitIds;
+      for(const id of ids){
+        await sb('habit_logs','DELETE',null,{habit_id:id});
+        await sb('habits','DELETE',null,{id});
+      }
+      habits=habits.filter(h=>!ids.includes(h.id));
+      habitLogs=habitLogs.filter(l=>!ids.includes(l.habit_id));
+      renderHabitsScreen(); renderTodayScreen();
+    },3700);
+    showToast('challenge ended — habits will be removed', ()=>{
+      clearTimeout(deleteTimer);
+      localStorage.setItem('active_challenge',JSON.stringify(ch));
+      renderChallengeBanner(); renderChallengeHabitSection(); renderHabitsScreen(); renderTodayScreen();
+    });
+  }
 }
 
 // ── PUSH NOTIFICATIONS ─────────────────────────
