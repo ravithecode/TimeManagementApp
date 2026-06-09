@@ -1774,7 +1774,7 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
         }
       }
     }
-    out.push({time:fmtT(blk.s),title:blk.title,desc:blk.desc,type:blk.type});
+    out.push({time:fmtT(blk.s),title:blk.title,desc:blk.desc,type:blk.type,dur:blk.dur||30,...(blk.fixedMins!==undefined?{fixedMins:blk.fixedMins}:{})});
     cursor=blk.e;
   }
   // Any tasks that didn't fit — add individually as unscheduled
