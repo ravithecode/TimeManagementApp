@@ -583,6 +583,8 @@ select.opt-chip{appearance:none;cursor:pointer}
       <button class="dur-chip" data-dur="45" onclick="pickDuration(45,this)">45m</button>
       <button class="dur-chip" data-dur="60" onclick="pickDuration(60,this)">1h</button>
       <button class="dur-chip" data-dur="120" onclick="pickDuration(120,this)">2h</button>
+      <button class="dur-chip" data-dur="240" onclick="pickDuration(240,this)">4h</button>
+      <button class="dur-chip" data-dur="360" onclick="pickDuration(360,this)">6h</button>
     </div>
     <div class="search-bar">
       <i class="ti ti-search"></i>
@@ -866,21 +868,21 @@ select.opt-chip{appearance:none;cursor:pointer}
     <div class="notif-row">
       <div>
         <div style="font-weight:600;font-size:14px">🌅 morning check-in</div>
-        <div style="font-size:12px;color:var(--ink3)">7am daily intentions</div>
+        <div style="font-size:12px;color:var(--ink3)" id="notif-morning-lbl">daily intentions</div>
       </div>
       <label class="toggle-sw"><input type="checkbox" id="notif-morning" onchange="saveNotifPrefs()"><span></span></label>
     </div>
     <div class="notif-row">
       <div>
         <div style="font-weight:600;font-size:14px">🌿 midday habits</div>
-        <div style="font-size:12px;color:var(--ink3)">12pm habit reminder</div>
+        <div style="font-size:12px;color:var(--ink3)" id="notif-habits-lbl">habit reminder</div>
       </div>
       <label class="toggle-sw"><input type="checkbox" id="notif-habits" onchange="saveNotifPrefs()"><span></span></label>
     </div>
     <div class="notif-row">
       <div>
         <div style="font-weight:600;font-size:14px">🌙 evening wind-down</div>
-        <div style="font-size:12px;color:var(--ink3)">9pm reflection nudge</div>
+        <div style="font-size:12px;color:var(--ink3)" id="notif-evening-lbl">reflection nudge</div>
       </div>
       <label class="toggle-sw"><input type="checkbox" id="notif-evening" onchange="saveNotifPrefs()"><span></span></label>
     </div>
@@ -892,6 +894,7 @@ select.opt-chip{appearance:none;cursor:pointer}
       <label class="toggle-sw"><input type="checkbox" id="notif-overdue" onchange="saveNotifPrefs()"><span></span></label>
     </div>
     <div id="notif-status" style="font-size:12px;color:var(--ink3);text-align:center;margin-top:8px"></div>
+    <button id="notif-test-btn" onclick="sendTestNotif()" style="display:none;width:100%;margin-top:8px;background:var(--surface2);border:1px solid #ddd;border-radius:10px;padding:9px;font-size:13px;color:var(--ink2);cursor:pointer">send test notification</button>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeNotifModal()">done</button>
     </div>
@@ -914,6 +917,8 @@ select.opt-chip{appearance:none;cursor:pointer}
       <button class="dur-chip" data-dur="45" onclick="pickEditDuration(45,this)">45m</button>
       <button class="dur-chip" data-dur="60" onclick="pickEditDuration(60,this)">1h</button>
       <button class="dur-chip" data-dur="120" onclick="pickEditDuration(120,this)">2h</button>
+      <button class="dur-chip" data-dur="240" onclick="pickEditDuration(240,this)">4h</button>
+      <button class="dur-chip" data-dur="360" onclick="pickEditDuration(360,this)">6h</button>
     </div>
     <div class="modal-btns">
       <button class="mbtn sec" onclick="closeEditModal()">cancel</button>
@@ -1716,14 +1721,29 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
   const tasks=[...priorityTasks,...otherTasks];
   const fixed=[];
 
+  // Categorise habits by natural time of day
+  const MORNING_H_EMOJIS=new Set(['🏃','💪','🚶','🧘','☀️','📵','🧴','🤸']);
+  const EVENING_H_EMOJIS=new Set(['📚','🌙','😴','🌿','✍️']);
+  const MORNING_H_KW=['gym','run','exercise','workout','meditat','morning','yoga','stretch','jog','push','walk','cold shower'];
+  const EVENING_H_KW=['read','book','sleep','reflect','journal','gratitude','evening','wind down','study'];
+  function habitSlot(h){
+    const n=(h.name||'').toLowerCase();
+    if(MORNING_H_EMOJIS.has(h.emoji)||MORNING_H_KW.some(k=>n.includes(k))) return 'morning';
+    if(EVENING_H_EMOJIS.has(h.emoji)||EVENING_H_KW.some(k=>n.includes(k))) return 'evening';
+    return 'midday';
+  }
+  const morningHabits=(habitList||[]).filter(h=>habitSlot(h)==='morning');
+  const middayHabits=(habitList||[]).filter(h=>habitSlot(h)==='midday');
+  const eveningHabits=(habitList||[]).filter(h=>habitSlot(h)==='evening');
+
   // Morning routine + breakfast
   fixed.push({s:wake,e:wake+20,dur:20,title:'morning routine',desc:'wake up & get ready',type:'break'});
   fixed.push({s:wake+20,e:wake+50,dur:30,title:'breakfast',desc:'',type:'break'});
 
-  // Habits block in morning (after breakfast)
-  if(habitList&&habitList.length){
-    const habitDur=habitList.length*20;
-    fixed.push({s:wake+50,e:wake+50+habitDur,dur:habitDur,title:`habits (${habitList.length})`,desc:habitList.map(h=>h.name).join(' · '),type:'habit'});
+  // Morning habits (gym, meditation, exercise) — right after breakfast
+  if(morningHabits.length){
+    const dur=morningHabits.length*20;
+    fixed.push({s:wake+50,e:wake+50+dur,dur,title:`habits (${morningHabits.length})`,desc:morningHabits.map(h=>h.name).join(' · '),type:'habit'});
   }
 
   // Meetings at their exact times (assume 1 hour each)
@@ -1733,16 +1753,40 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
     if(s>=wake&&s<sleep) fixed.push({s,e:Math.min(s+60,sleep),dur:60,fixedMins:s,title:m.title,desc:'',type:'meeting'});
   });
 
-  // Lunch: target 11:30am, minimum 3h after wake
-  const lunchTarget=Math.max(11*60+30,wake+180);
+  // Lunch: target 12pm, minimum 4h after wake (later risers shift accordingly)
+  const lunchTarget=Math.max(12*60,wake+240);
   const lunchAt=findFreeSlot(fixed,lunchTarget,45,sleep-90);
   if(lunchAt!==null) fixed.push({s:lunchAt,e:lunchAt+45,dur:45,title:'lunch break',desc:'step away from the screen',type:'break'});
 
-  // Dinner: 6:30pm, skip if too close to lunch or sleep
-  const dinnerTarget=18*60+30;
-  if(dinnerTarget>(lunchAt||0)+90&&dinnerTarget+45<sleep-30){
-    const dinnerAt=findFreeSlot(fixed,dinnerTarget,45,sleep-30);
+  // Morning snack: add if gap between breakfast end and lunch is >3.5h (e.g. 5am wake)
+  const breakfastEnd=wake+50;
+  const snackTarget=wake+300; // 5h after wake
+  if(lunchAt!==null&&(lunchAt-breakfastEnd)>210&&(snackTarget+105)<=lunchAt){
+    const snackAt=findFreeSlot(fixed,snackTarget,15,lunchAt-90);
+    if(snackAt!==null) fixed.push({s:snackAt,e:snackAt+15,dur:15,title:'morning snack',desc:'fruit or light snack',type:'break'});
+  }
+
+  // Midday habits (water, focus, general wellness) — ~30min after lunch
+  if(middayHabits.length&&lunchAt!==null){
+    const dur=middayHabits.length*20;
+    const s=findFreeSlot(fixed,lunchAt+75,dur,17*60);
+    if(s!==null) fixed.push({s,e:s+dur,dur,title:`habits (${middayHabits.length})`,desc:middayHabits.map(h=>h.name).join(' · '),type:'habit'});
+  }
+
+  // Dinner: target 5:30pm, within 4:30–6pm window, at least 2h after lunch
+  let dinnerAt=null;
+  const dinnerTarget=17*60+30;
+  if(dinnerTarget>(lunchAt||0)+120&&dinnerTarget+45<=18*60&&dinnerTarget+45<sleep-30){
+    dinnerAt=findFreeSlot(fixed,dinnerTarget,45,18*60);
     if(dinnerAt!==null) fixed.push({s:dinnerAt,e:dinnerAt+45,dur:45,title:'dinner',desc:'',type:'break'});
+  }
+
+  // Evening habits (reading, journaling, reflection) — ~30min after dinner or 1h before wind down
+  if(eveningHabits.length){
+    const dur=eveningHabits.length*20;
+    const eveningAnchor=dinnerAt!==null?dinnerAt+75:sleep-60-dur;
+    const s=findFreeSlot(fixed,eveningAnchor,dur,sleep-30-dur);
+    if(s!==null) fixed.push({s,e:s+dur,dur,title:`habits (${eveningHabits.length})`,desc:eveningHabits.map(h=>h.name).join(' · '),type:'habit'});
   }
 
   // Wind down
@@ -1770,7 +1814,7 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
         }
       }
     }
-    out.push({time:fmtT(blk.s),title:blk.title,desc:blk.desc,type:blk.type});
+    out.push({time:fmtT(blk.s),title:blk.title,desc:blk.desc,type:blk.type,dur:blk.dur||30,...(blk.fixedMins!==undefined?{fixedMins:blk.fixedMins}:{})});
     cursor=blk.e;
   }
   // Any tasks that didn't fit — add individually as unscheduled
@@ -1805,7 +1849,7 @@ function generatePlan(){
 }
 function renderSchedule(blocks){
   const out=document.getElementById('schedule-out');
-  const moveable=b=>b.type==='task'||b.type==='habit';
+  const moveable=b=>true;
   out.innerHTML=`<div class="sched-note">based on how your day looks with your meetings and routine, we suggest this to be your ideal day ✨</div>`+
   blocks.map((b,i)=>{
     const canMove=moveable(b);
@@ -2388,15 +2432,44 @@ function openNotifModal() {
     document.getElementById('notif-perm-msg').textContent = 'push notifications are not supported in this browser';
     document.getElementById('notif-perm-msg').style.display = 'block';
   }
+  // Show scheduled times in the user's local timezone
+  const utcToLocal=h=>{const d=new Date();d.setUTCHours(h,0,0,0);return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});};
+  document.getElementById('notif-morning-lbl').textContent=`daily intentions · ${utcToLocal(12)}`;
+  document.getElementById('notif-habits-lbl').textContent=`habit reminder · ${utcToLocal(17)}`;
+  document.getElementById('notif-evening-lbl').textContent=`reflection nudge · ${utcToLocal(2)}`;
+
   const prefs = JSON.parse(localStorage.getItem('notif_prefs') || '{}');
   ['morning','habits','evening','overdue'].forEach(k => {
     document.getElementById('notif-'+k).checked = !!prefs[k];
   });
+  const anyOn = Object.values(prefs).some(Boolean);
+  document.getElementById('notif-test-btn').style.display = anyOn ? 'block' : 'none';
   document.getElementById('notif-status').textContent = '';
   document.getElementById('notif-overlay').classList.add('open');
 }
 function closeNotifModal() {
   document.getElementById('notif-overlay').classList.remove('open');
+}
+async function sendTestNotif() {
+  const btn = document.getElementById('notif-test-btn');
+  const statusEl = document.getElementById('notif-status');
+  btn.textContent = 'sending…'; btn.disabled = true;
+  try {
+    if (Notification.permission !== 'granted') {
+      statusEl.textContent = 'permission not granted — enable in browser settings';
+      return;
+    }
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification('test from mytasks 👋', {
+      body: 'push notifications are working correctly',
+      icon: '/icon.svg', badge: '/icon.svg', tag: 'test'
+    });
+    statusEl.textContent = '✓ test sent — check your notifications';
+  } catch(err) {
+    statusEl.textContent = `error: ${err.message}`;
+  } finally {
+    btn.textContent = 'send test notification'; btn.disabled = false;
+  }
 }
 
 async function saveNotifPrefs() {
@@ -2441,18 +2514,31 @@ async function saveNotifPrefs() {
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
-    await fetch('/.netlify/functions/subscribe', {
+    const res = await fetch('/.netlify/functions/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user_id: currentUser.id, subscription: sub.toJSON(), prefs })
     });
+    if (!res.ok) {
+      const body = await res.json().catch(()=>({}));
+      statusEl.textContent = `save failed: ${body.error||res.status}`;
+      return;
+    }
     localStorage.setItem('notif_prefs', JSON.stringify({
       morning: prefs.notif_morning, habits: prefs.notif_habits,
       evening: prefs.notif_evening, overdue: prefs.notif_overdue
     }));
+    document.getElementById('notif-test-btn').style.display = 'block';
+    statusEl.textContent = '✓ saved — sending test…';
+    await reg.showNotification('notifications enabled ✓', {
+      body: 'mytasks will send you reminders at your scheduled times',
+      icon: '/icon.svg',
+      badge: '/icon.svg',
+      tag: 'test'
+    });
     statusEl.textContent = '✓ saved';
   } catch (err) {
-    statusEl.textContent = 'could not save (works on Netlify only)';
+    statusEl.textContent = `error: ${err.message}`;
   }
 }
 
