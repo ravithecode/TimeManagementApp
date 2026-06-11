@@ -738,7 +738,19 @@ select.opt-chip{appearance:none;cursor:pointer}
         </div>
       </div>
     </div>
-    <div style="padding:12px 16px 0">
+    <div style="padding:10px 16px 0">
+      <div id="gcal-connect-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid #ece9e4;border-radius:var(--radius);padding:10px 14px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px">
+          <span style="font-size:18px">📅</span>
+          <div>
+            <div style="font-weight:600;color:var(--ink)" id="gcal-label">google calendar</div>
+            <div style="font-size:11px;color:var(--ink3)" id="gcal-sublabel">connect to auto-import meetings</div>
+          </div>
+        </div>
+        <button id="gcal-btn" onclick="connectGoogleCalendar()" style="background:var(--surface2);border:1px solid #ddd;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:500;color:var(--ink2);cursor:pointer">connect</button>
+      </div>
+    </div>
+    <div style="padding:4px 16px 0">
       <div class="section-label">what's going into the plan</div>
       <div id="plan-context" style="background:var(--surface);border:1px solid #ece9e4;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
       <div style="display:flex;gap:8px">
@@ -950,6 +962,7 @@ let searchQuery = '';
 let focusPicks = new Set();
 let editingTodo = null;
 let lastGeneratedBlocks = [], lastWake = '07:00';
+let calendarConnected = false;
 let addHabitEmoji = '🏃', addHabitColor = '#e4f4ee';
 let selectedDuration = null, editDuration = null;
 const HABIT_EMOJIS = ['🏃','🧘','📚','💧','🥗','😴','💪','🎯','✍️','🧹','🚶','🎵','🌿','☀️','🧴'];
@@ -1213,6 +1226,8 @@ async function showApp(){
   loadDailyFact();
   loadMotivCard();
   renderChallengeBanner();
+  checkCalendarConnection();
+  handleCalendarUrlParam();
   checkPrompts();
   setInterval(checkPrompts,60000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadAll()});
@@ -1824,7 +1839,7 @@ function runScheduler(wakeStr, sleepStr, meetingList, priorityTasks, otherTasks,
   }
   return out;
 }
-function generatePlan(){
+async function generatePlan(){
   const wake=document.getElementById('wake-time').value||'07:00';
   lastWake=wake;
   const sleep=document.getElementById('sleep-time').value||'22:00';
@@ -1837,7 +1852,18 @@ function generatePlan(){
   const origHTML=activeBtn.innerHTML;
   activeBtn.textContent='…'; activeBtn.disabled=true;
   try{
-    lastGeneratedBlocks=runScheduler(wake,sleep,meetings,priorityTasks,otherTasks,todayHabits);
+    // Merge manually-added meetings with any Google Calendar events
+    let allMeetings=[...meetings];
+    if(calendarConnected){
+      const gcalEvents=await fetchGoogleCalendarEvents();
+      gcalEvents.forEach(ev=>{
+        // Skip if a manual meeting at the same time already exists
+        const dup=allMeetings.some(m=>m.time===ev.time&&m.title.toLowerCase()===ev.title.toLowerCase());
+        if(!dup) allMeetings.push({time:ev.time,title:ev.title,source:'google'});
+      });
+      allMeetings.sort((a,b)=>a.time<b.time?-1:1);
+    }
+    lastGeneratedBlocks=runScheduler(wake,sleep,allMeetings,priorityTasks,otherTasks,todayHabits);
     renderSchedule(lastGeneratedBlocks);
     document.getElementById('regen-btn').style.display='flex';
     document.getElementById('gen-btn').style.display='none';
@@ -2540,6 +2566,78 @@ async function saveNotifPrefs() {
   } catch (err) {
     statusEl.textContent = `error: ${err.message}`;
   }
+}
+
+// ── GOOGLE CALENDAR ────────────────────────────
+async function checkCalendarConnection(){
+  if(!currentUser) return;
+  try{
+    const rows=await sb('calendar_tokens','GET',null,{user_id:currentUser.id,provider:'google'});
+    calendarConnected=Array.isArray(rows)&&rows.length>0;
+  }catch{ calendarConnected=false; }
+  renderCalendarBtn();
+}
+
+function renderCalendarBtn(){
+  const btn=document.getElementById('gcal-btn');
+  const lbl=document.getElementById('gcal-sublabel');
+  if(!btn) return;
+  if(calendarConnected){
+    btn.textContent='disconnect';
+    btn.style.color='var(--accent)';
+    btn.onclick=disconnectGoogleCalendar;
+    lbl.textContent='meetings auto-imported into planner';
+  } else {
+    btn.textContent='connect';
+    btn.style.color='var(--ink2)';
+    btn.onclick=connectGoogleCalendar;
+    lbl.textContent='connect to auto-import meetings';
+  }
+}
+
+function connectGoogleCalendar(){
+  if(!currentUser) return;
+  window.location.href=`/.netlify/functions/google-oauth-start?user_id=${currentUser.id}`;
+}
+
+async function disconnectGoogleCalendar(){
+  if(!currentUser) return;
+  await sb('calendar_tokens','DELETE',null,{user_id:currentUser.id,provider:'google'});
+  calendarConnected=false;
+  renderCalendarBtn();
+  showToast('google calendar disconnected');
+}
+
+function handleCalendarUrlParam(){
+  const params=new URLSearchParams(window.location.search);
+  const cal=params.get('calendar');
+  if(!cal) return;
+  // Clean the URL without reloading
+  window.history.replaceState({},'',window.location.pathname);
+  if(cal==='connected'){
+    calendarConnected=true;
+    renderCalendarBtn();
+    showToast('google calendar connected ✓');
+  } else if(cal==='error'){
+    const reason=params.get('reason')||'unknown';
+    showToast(`calendar connect failed: ${reason}`);
+  }
+}
+
+async function fetchGoogleCalendarEvents(){
+  if(!currentUser||!calendarConnected) return [];
+  try{
+    const tz=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const date=todayStr();
+    const res=await fetch('/.netlify/functions/google-calendar-today',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user_id:currentUser.id,date,timezone:tz})
+    });
+    if(!res.ok) return [];
+    const {events}=await res.json();
+    return Array.isArray(events)?events:[];
+  }catch{ return []; }
 }
 
 function initNotifButton() {
